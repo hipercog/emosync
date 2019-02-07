@@ -1,0 +1,57 @@
+library(tidyverse)
+library(readr)
+
+basepath <- '~/Benslab/PROJECT_LANGLIE/Batchalyze/'
+setwd(basepath)
+
+parse_recording <- function(fname){
+  fn <- parse_number(basename(fname))
+  rec <- read.csv(fname, sep = "\t", header = TRUE)
+  rec$Part <- rep(fn, nrow(rec))
+  rec
+}
+
+read_all_recordings <- function(basepath, pat="", ext="") {
+  file_list <- list.files(basepath, pattern = paste0(".*", pat, ".*", ext), full.names = TRUE)
+  if (length(file_list) == 0){
+    print('No files found!')
+    return()
+  }
+  out <- parse_recording(file_list[[1]])
+  for (f in file_list[-1]) {
+    out <- rbind(out, parse_recording(f))
+  }
+  out
+}
+
+times <- c('0to1', '1to2', '2to3', '3to4', '4to5', '5to6', '6to7', '3to6')
+typstr <- 'R_norp'
+T1toT2 <- times[6]
+
+# for (rgx in side_time) {
+  rgx <- paste0(typstr, '.*', T1toT2)
+  print(rgx)
+  df <- read_all_recordings(paste0(basepath, '/ERA/'), rgx, 'txt')
+  df <- df %>% filter(Event.Name > 9) %>% filter(Event.Name < 90) 
+  df$Event.Name <- factor(df$Event.Name)
+  levels(df$Event.Name) <- c('ftnt', 'ftnl', 'ftwt', 'ftwl', 'stnt', 'stnl', 'stwt', 'stwl')
+  
+  ggplot(df, aes(x = factor(Event.Name), y = CDA.nSCR)) + geom_boxplot(outlier.shape = NA) + 
+    geom_point(aes(color = factor(Part)), position = position_dodge(width = 0.5)) + ggtitle(paste(rgx, ': CDA nSCR'))
+  ggsave(paste0('Figures/', typstr, '_', T1toT2, '-CDA-nSCR'), device = 'png')
+  ggplot(df, aes(x = factor(Event.Name), y = CDA.Latency)) + geom_boxplot(outlier.shape = NA) + 
+    geom_point(aes(color = factor(Part)), position = position_dodge(width = 0.5)) + ggtitle(paste(rgx, ': CDA Latency'))
+  ggsave(paste0('Figures/', typstr, '_', T1toT2, '-CDA-Latency'), device = 'png')
+  ggplot(df, aes(x = factor(Event.Name), y = CDA.SCR)) + geom_boxplot(outlier.shape = NA) + 
+    geom_point(aes(color = factor(Part)), position = position_dodge(width = 0.5)) + ggtitle(paste(rgx, ': CDA SCR'))
+  ggsave(paste0('Figures/', typstr, '_', T1toT2, '-CDA-SCR'), device = 'png')
+  ggplot(df, aes(x = factor(Event.Name), y = CDA.PhasicMax)) + geom_boxplot(outlier.shape = NA) + 
+    geom_point(aes(color = factor(Part)), position = position_dodge(width = 0.5)) + ggtitle(paste(rgx, ': CDA PhasicMax'))
+  ggsave(paste0('Figures/', typstr, '_', T1toT2, '-CDA-PhasicMax'), device = 'png')
+  ggplot(df, aes(x = factor(Event.Name), y = CDA.Tonic)) + geom_boxplot(outlier.shape = NA) + 
+    geom_point(aes(color = factor(Part)), position = position_dodge(width = 0.5)) + ggtitle(paste(rgx, ': CDA Tonic'))
+  ggsave(paste0('Figures/', typstr, '_', T1toT2, '-CDA-Tonic'), device = 'png')
+  ggplot(df, aes(x = factor(Event.Name), y = Global.Mean)) + geom_boxplot(outlier.shape = NA) + 
+    geom_point(aes(color = factor(Part)), position = position_dodge(width = 0.5)) + ggtitle(paste(rgx, ': Global Mean'))
+  ggsave(paste0('Figures/', typstr, '_', T1toT2, '-GlobalMean'), device = 'png')
+# }
