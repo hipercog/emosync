@@ -112,8 +112,8 @@ else
         , 'zscale', 1 ...
         , 'export_era', ...
         [Arg.era_beg Arg.era_end Arg.scr_thr Arg.sav_typ])
-        sbf_rename_exp(fcell, '_era_z'...
-            , Arg.era_beg, Arg.era_end, Arg.scr_thr, Arg.sav_typ)
+    sbf_rename_exp(fcell, '_era_z'...
+        , Arg.era_beg, Arg.era_end, Arg.scr_thr, Arg.sav_typ)
 end
 end
 
@@ -143,9 +143,9 @@ end
         for ixf = 1:numel(filecell)
             [p, f, ~] = fileparts(filecell{ixf});
             if isempty(first) || isempty(last)
-                sfx = sprintf('%fuS.', thr);
+                sfx = sprintf('%.2fuS.', thr);
             else
-                sfx = sprintf('%dto%d_%fuS.', first, last, thr);
+                sfx = sprintf('%dto%d_%.2fuS.', first, last, thr);
             end
             movefile(fullfile(p, [f name '.' save_type{sav}])...
                 , fullfile(p, [f name '_' sfx save_type{sav}]) )
