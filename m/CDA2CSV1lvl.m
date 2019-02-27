@@ -4,20 +4,18 @@ OUTDIR = fullfile(ROOTDIR, 'csv');
 
 if ~isfolder(OUTDIR), mkdir(OUTDIR); end
 
-
 MEASUREMENTS = dir(fullfile(ROOTDIR, '*.mat'));
-MEASUREMENTS = MEASUREMENTS(3:end);
 
 for k = 1:length(MEASUREMENTS)
 	fprintf(1, '%s\n', MEASUREMENTS(k).name)
 
-    if strcmp(files(n).name, 'batchmode_protocol.mat')
+    if strcmp(MEASUREMENTS(k).name, 'batchmode_protocol.mat')
         continue
     end
-
-    fprintf(1, '\t[%s] %s\n', datestr(now), files(n).name);
-
-    file = load(fullfile(ROOTDIR, MEASUREMENTS(k).name, files(n).name));
+    
+    file = load(fullfile(MEASUREMENTS(k).folder, MEASUREMENTS(k).name));
+    [~, fname, ~] = fileparts(MEASUREMENTS(k).name);
+    
     hdr = {'time', 'conductance', 'driver', 'scr', 'scl'};
     data = cat(2, file.data.time', ...
                   file.data.conductance', ...
@@ -25,7 +23,7 @@ for k = 1:length(MEASUREMENTS)
                   file.analysis.phasicData', ...
                   file.analysis.tonicData');
 
-    filename = fullfile(OUTPUT, [files(n).name(1:end-3) 'csv']);
+    filename = fullfile(OUTDIR, [fname '.csv']);
 
     fid = fopen(filename, 'w');
 
@@ -44,7 +42,8 @@ for k = 1:length(MEASUREMENTS)
 
     % Write data
     for x = 1:size(data, 1)
-        fprintf(fid, '%f,%f,%f,%f,%f\n', data(x, 1), data(x, 2), data(x, 3), data(x, 4), data(x, 5));
+        fprintf(fid, '%f,%f,%f,%f,%f\n'...
+            , data(x, 1), data(x, 2), data(x, 3), data(x, 4), data(x, 5));
     end
 
     fclose(fid);

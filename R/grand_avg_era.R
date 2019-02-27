@@ -1,57 +1,97 @@
 library(tidyverse)
-library(readr)
+library(R.matlab)
 
-basepath <- '~/Benslab/project_LANGLIE/Batchalyze/'
+basepath <- '~/Benslab/EMOSYNC/MethLounge/'
 setwd(basepath)
 
-parse_recording <- function(fname){
-  fn <- parse_number(basename(fname))
-  rec <- read.csv(fname, sep = "\t", header = TRUE)
-  rec$Part <- rep(fn, nrow(rec))
-  rec
+# EDA
+times <- c('1to3', '3to5', '5to7', '7to9', '9to11')
+typstr <- '602_autobio_era'
+
+eda <- read_all_recordings(basepath, paste0(typstr, '.*', 'to'), 'txt')
+eda.viha <- eda %>% 
+  filter(Event.Name == "VIHA") %>% 
+  group_by(File) %>%
+  summarise_if(is.numeric, mean, na.rm=TRUE) %>%
+  rename_if(is.numeric, ~paste0("avg_", .))
+
+# EMG
+s6emg <- read.csv('EMG00601.csv')
+idx = which(s6emg$sampevs == "VIHA", arr.ind=TRUE)
+emg <- s6emg[seq(idx[1], idx[1]+49), -1]
+emg$trial <- rep(1, nrow(emg))
+emg$sec <- c(rep(1, 10), rep(2, 10), rep(3, 10), rep(4, 10), rep(5, 10))
+for (i in 2:length(idx)){
+  tmp = s6emg[seq(idx[i], idx[i]+49), -1]
+  tmp$trial = rep(i, nrow(tmp))
+  tmp$sec <- c(rep(1, 10), rep(2, 10), rep(3, 10), rep(4, 10), rep(5, 10))
+  emg <- rbind(emg, tmp)
+}
+emg.viha <- group_by(emg, sec) %>% 
+  summarise_at(1:3, mean) %>%
+  rename_at(2:4, ~paste0("avg_", .))
+
+require(corrgram)
+corrMatrix("SCR", eda.viha$avg_CDA.SCR,
+           "SCRmax", eda.viha$avg_CDA.PhasicMax, 
+           "fEMG.zyg", emg.viha$avg_zy6,
+           "fEMG.cor", emg.viha$avg_co6,
+           "fEMG.orb", emg.viha$avg_or6,
+           title = "SCR vs EMG")
+
+df <- cbind(eda.viha, emg.viha)
+df <- select(df, avg_CDA.SCR, avg_CDA.PhasicMax, avg_zy6, avg_co6, avg_or6)
+
+# Correlation matrix plot sapproach from http://www.sthda.com/english/wiki/ggplot2-quick-correlation-matrix-heatmap-r-software-and-data-visualization
+library(reshape2)
+cormat <- round(cor(df), 2)
+mlt_df <- melt(cormat)
+ggplot(data = mlt_df, aes(x=Var1, y=Var2, fill=value)) + 
+  geom_tile(color = "white") +
+  scale_fill_gradient2(low = "blue", high = "red", mid = "white", 
+                       midpoint = 0, limit = c(-1,1), space = "Lab", 
+                       name="Pearson\nCorrelation") +
+  theme_minimal() + 
+  theme(axis.text.x = element_text(angle = 45, vjust = 1, size = 12, hjust = 1))+
+  coord_fixed()
+
+# reorder cormat by corr coef to identify patterns in the matrix. hclust for hierarchical clustering order
+reorder_cormat <- function(cormat){
+  # Use correlation between variables as distance
+  dd <- as.dist((1-cormat)/2)
+  hc <- hclust(dd)
+  cormat <-cormat[hc$order, hc$order]
 }
 
-read_all_recordings <- function(basepath, pat="", ext="") {
-  file_list <- list.files(basepath, pattern = paste0(".*", pat, ".*", ext), full.names = TRUE)
-  if (length(file_list) == 0){
-    print('No files found!')
-    return()
-  }
-  out <- parse_recording(file_list[[1]])
-  for (f in file_list[-1]) {
-    out <- rbind(out, parse_recording(f))
-  }
-  out
-}
+# Reorder the correlation matrix
+cormat <- reorder_cormat(cormat)
+upper_tri <- get_upper_tri(cormat)
+# Melt the correlation matrix
+melted_cormat <- melt(upper_tri, na.rm = TRUE)
+# Create a ggheatmap
+ggheatmap <- ggplot(melted_cormat, aes(Var2, Var1, fill = value))+
+  geom_tile(color = "white")+
+  scale_fill_gradient2(low = "blue", high = "red", mid = "white", 
+                       midpoint = 0, limit = c(-1,1), space = "Lab", 
+                       name="Pearson\nCorrelation") +
+  theme_minimal()+ # minimal theme
+  theme(axis.text.x = element_text(angle = 45, vjust = 1, 
+                                   size = 12, hjust = 1))+
+  coord_fixed()
+# Print the heatmap
+print(ggheatmap)
 
-times <- c('0to1', '1to2', '2to3', '3to4', '4to5', '5to6', '6to7', '3to6')
-typstr <- 'R_norp'
-T1toT2 <- times[6]
-
-# for (rgx in side_time) {
-  rgx <- paste0(typstr, '.*', T1toT2)
-  print(rgx)
-  df <- read_all_recordings(paste0(basepath, '/ERA/'), rgx, 'txt')
-  df <- df %>% filter(Event.Name > 9) %>% filter(Event.Name < 90) 
-  df$Event.Name <- factor(df$Event.Name)
-  levels(df$Event.Name) <- c('ftnt', 'ftnl', 'ftwt', 'ftwl', 'stnt', 'stnl', 'stwt', 'stwl')
-  
-  ggplot(df, aes(x = factor(Event.Name), y = CDA.nSCR)) + geom_boxplot(outlier.shape = NA) + 
-    geom_point(aes(color = factor(Part)), position = position_dodge(width = 0.5)) + ggtitle(paste(rgx, ': CDA nSCR'))
-  ggsave(paste0('Figures/', typstr, '_', T1toT2, '-CDA-nSCR'), device = 'png')
-  ggplot(df, aes(x = factor(Event.Name), y = CDA.Latency)) + geom_boxplot(outlier.shape = NA) + 
-    geom_point(aes(color = factor(Part)), position = position_dodge(width = 0.5)) + ggtitle(paste(rgx, ': CDA Latency'))
-  ggsave(paste0('Figures/', typstr, '_', T1toT2, '-CDA-Latency'), device = 'png')
-  ggplot(df, aes(x = factor(Event.Name), y = CDA.SCR)) + geom_boxplot(outlier.shape = NA) + 
-    geom_point(aes(color = factor(Part)), position = position_dodge(width = 0.5)) + ggtitle(paste(rgx, ': CDA SCR'))
-  ggsave(paste0('Figures/', typstr, '_', T1toT2, '-CDA-SCR'), device = 'png')
-  ggplot(df, aes(x = factor(Event.Name), y = CDA.PhasicMax)) + geom_boxplot(outlier.shape = NA) + 
-    geom_point(aes(color = factor(Part)), position = position_dodge(width = 0.5)) + ggtitle(paste(rgx, ': CDA PhasicMax'))
-  ggsave(paste0('Figures/', typstr, '_', T1toT2, '-CDA-PhasicMax'), device = 'png')
-  ggplot(df, aes(x = factor(Event.Name), y = CDA.Tonic)) + geom_boxplot(outlier.shape = NA) + 
-    geom_point(aes(color = factor(Part)), position = position_dodge(width = 0.5)) + ggtitle(paste(rgx, ': CDA Tonic'))
-  ggsave(paste0('Figures/', typstr, '_', T1toT2, '-CDA-Tonic'), device = 'png')
-  ggplot(df, aes(x = factor(Event.Name), y = Global.Mean)) + geom_boxplot(outlier.shape = NA) + 
-    geom_point(aes(color = factor(Part)), position = position_dodge(width = 0.5)) + ggtitle(paste(rgx, ': Global Mean'))
-  ggsave(paste0('Figures/', typstr, '_', T1toT2, '-GlobalMean'), device = 'png')
-# }
+ggheatmap + 
+  geom_text(aes(Var2, Var1, label = value), color = "black", size = 4) +
+  theme(
+    axis.title.x = element_blank(),
+    axis.title.y = element_blank(),
+    panel.grid.major = element_blank(),
+    panel.border = element_blank(),
+    panel.background = element_blank(),
+    axis.ticks = element_blank(),
+    legend.justification = c(1, 0),
+    legend.position = c(0.6, 0.7),
+    legend.direction = "horizontal")+
+  guides(fill = guide_colorbar(barwidth = 7, barheight = 1,
+                               title.position = "top", title.hjust = 0.5))
