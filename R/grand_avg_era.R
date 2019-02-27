@@ -1,7 +1,7 @@
 library(tidyverse)
 library(readr)
 
-basepath <- '~/Benslab/PROJECT_LANGLIE/Batchalyze/'
+basepath <- '~/Benslab/project_LANGLIE/Batchalyze/'
 setwd(basepath)
 
 parse_recording <- function(fname){
