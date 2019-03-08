@@ -1,4 +1,4 @@
-function Ledalab_batch_tree(indir, varargin)
+function Ledalab_batch_tree(indir, downsamp, varargin)
 % Ledalab_batch_tree applies Ledalab batch processing to files across a tree
 % 
 % Syntax:
@@ -13,6 +13,7 @@ function Ledalab_batch_tree(indir, varargin)
 % Input:
 %   indir       string, root folder: all target files here or in any subfolder
 %                       (recursive) are returned for processing
+%   downsamp    int, factor to downsample by
 % 
 % Varargin:
 %   filt        string, part of filename to match subset of files for, e.g. 
@@ -24,8 +25,10 @@ function Ledalab_batch_tree(indir, varargin)
 % 
 % (for all following parameters, see Leda docs for more detail)
 %   format      string, data format for Ledalab to read, default = 'biotracemat'
-%   smooth      cell, smoothing parameters, default
-%   analyze     string, decomposition analysis algorithm, default = CDA
+%                       FOR 'format' OPTOINS SEE LEDALAB'S import_data.m
+%   filter      [1 2] vector, order and low-pass cutoff, default = [10 12]
+%   smooth      cell, smoothing parameters, default = {'gauss' 20}
+%   analyze     string, decomposition analysis algorithm, default = 'CDA'
 %   optimize    int, Optimisation steps, default = 2
 %   era_beg     int vector, start times of ERA windows relative to events,
 %                           default = 0
@@ -40,6 +43,7 @@ function Ledalab_batch_tree(indir, varargin)
 p = inputParser;
 
 p.addRequired('indir', @ischar)
+p.addRequired('downsamp', @isscalar)
 
 p.addParameter('filt', '', @ischar)
 p.addParameter('ext', 'mat', @ischar)
@@ -49,6 +53,7 @@ p.addParameter('exp_era', true, @islogical)
 p.addParameter('exp_scrlist', true, @islogical)
 
 p.addParameter('format', 'biotracemat', @ischar)
+p.addParameter('filter', [10 12], @isnumeric)
 p.addParameter('smooth', {'gauss', 20}, @iscell)
 p.addParameter('analyze', 'CDA', @ischar)
 p.addParameter('optimize', 2, @isscalar)
@@ -60,7 +65,7 @@ p.addParameter('scr_thr', 0.01, @isnumeric)
 p.addParameter('sav_typ', 2, @isnumeric)
 
 
-p.parse(indir, varargin{:})
+p.parse(indir, downsamp, varargin{:})
 Arg = p.Results;
 
 scrlist_thr = Arg.scr_thr;
@@ -71,15 +76,34 @@ scrlist_thr = Arg.scr_thr;
 
 
 %% Leda-process and export ERAs for each file
-% for ixf = 1:length(files)
+fcell(strcmp({files.name}, 'batchmode_protocol.mat')) = [];
 
 % Open raw mats and decompose with CDA or DDA
 if Arg.DA
+if numel(fcell) > 32
+    fm = Arg.format;
+    filt = Arg.filter;
+    sm = Arg.smooth;
+    az = Arg.analyze;
+    oz = Arg.optimize;
+    parfor (ix = 1:numel(fcell))
+        Ledalab(fcell{ix}...
+            , 'open', fm...
+            , 'filter', filt...
+            , 'downsample', downsamp...
+            , 'smooth', sm...
+            , 'analyze', az...
+            , 'optimize', oz)
+    end
+else
     Ledalab(fcell...
         , 'open', Arg.format...
+        , 'filter', Arg.filter...
+        , 'downsample', downsamp...
         , 'smooth', Arg.smooth...
         , 'analyze',Arg.analyze...
         , 'optimize', Arg.optimize)
+end
 end
 
 

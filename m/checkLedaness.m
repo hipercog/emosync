@@ -10,5 +10,5 @@ for i = 1:numel(fs)
     f(i) = exist('fileinfo', 'var');
     d(i) = exist('data', 'var');
     fprintf('\n%s = anal: %d; finf: %d; data: %d', fs(i).name, a(i), f(i), d(i))
-    clear analysis fileinfo data
+    clear analysis fileinfo data        
 end

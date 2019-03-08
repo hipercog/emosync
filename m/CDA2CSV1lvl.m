@@ -1,5 +1,6 @@
 
-ROOTDIR = '/home/local/bcowley/Benslab/EMOSYNC/DYNECOM/EDAmat';
+% ROOTDIR = '/home/local/bcowley/Benslab/EMOSYNC/DYNECOM/EDAmat';
+ROOTDIR = './';
 OUTDIR = fullfile(ROOTDIR, 'csv');
 
 if ~isfolder(OUTDIR), mkdir(OUTDIR); end
