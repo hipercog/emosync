@@ -8,7 +8,7 @@ setwd(basepath)
 times <- c('1to3', '3to5', '5to7', '7to9', '9to11')
 typstr <- '602_autobio_era'
 
-eda <- read_all_recordings(basepath, paste0(typstr, '.*', 'to'), 'txt')
+eda <- read_all_recordings(basepath, paste0(typstr, '.*', 'to'), 'txt', delim = "\t")
 eda.viha <- eda %>% 
   filter(Event.Name == "VIHA") %>% 
   group_by(File) %>%

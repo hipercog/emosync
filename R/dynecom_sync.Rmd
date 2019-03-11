@@ -1,0 +1,38 @@
+---
+title: "DYNECOM"
+author: "Ben Cowley"
+date: "10 March 2019"
+output: html_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+knitr::opts_knit$set(root.dir = '/home/bcowley/Benslab/EMOSYNC/DYNECOM/')
+library(tidyverse)
+source('read_parse_era.R')
+```
+
+# Code wrangling
+
+
+```{r wrangle}
+# List of conditions
+paircond <- c('a', 'b')
+dyadcond <- c('D', 'S')
+physcond <- c('both', 'eeg', 'resp', 'na')
+timecond <- c('BL', '30s', '6min')
+subjs <- seq(1, 45)
+
+testi <- read_all_recordings('EDAcsv', pat=paste0(paircond[1], '_', dyadcond[1], '_', physcond[1], '.*', timecond[1]), ext="csv", skip = 1)
+
+```
+
+## Including Plots
+
+You can also embed plots, for example:
+
+```{r pressure, echo=FALSE}
+plot(pressure)
+```
+
+Note that the `echo = FALSE` parameter was added to the code chunk to prevent printing of the R code that generated the plot.
