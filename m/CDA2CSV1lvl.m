@@ -1,11 +1,15 @@
 
 % ROOTDIR = '/home/local/bcowley/Benslab/EMOSYNC/DYNECOM/EDAmat';
 ROOTDIR = './';
-OUTDIR = fullfile(ROOTDIR, 'csv');
+FILT_STR = 'DCVR';
+FILT_MSK = logical(~good);
 
+MEASUREMENTS = dir(fullfile(ROOTDIR, [FILT_STR '*.mat']));
+MEASUREMENTS(FILT_MSK) = [];
+
+OUTDIR = fullfile(ROOTDIR, 'csv');
 if ~isfolder(OUTDIR), mkdir(OUTDIR); end
 
-MEASUREMENTS = dir(fullfile(ROOTDIR, '*.mat'));
 
 for k = 1:length(MEASUREMENTS)
 	fprintf(1, '%s\n', MEASUREMENTS(k).name)

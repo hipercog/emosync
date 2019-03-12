@@ -17,22 +17,44 @@ source('read_parse_era.R')
 
 ```{r wrangle}
 # List of conditions
-paircond <- c('a', 'b')
 dyadcond <- c('D', 'S')
 physcond <- c('both', 'eeg', 'resp', 'na')
 timecond <- c('BL', '30s', '6min')
+paircond <- c('a', 'b')
 subjs <- seq(1, 45)
 
-testi <- read_all_recordings('EDAcsv', pat=paste0(paircond[1], '_', dyadcond[1], '_', physcond[1], '.*', timecond[1]), ext="csv", skip = 1)
+
+dfa <- read_all_recordings('EDAcsv', pat=paste0(paircond[1], '_', dyadcond[1], '_', physcond[1], '.*', timecond[2]), ext="csv", skip = 1)
+dfb <- read_all_recordings('EDAcsv', pat=paste0(paircond[2], '_', dyadcond[1], '_', physcond[1], '.*', timecond[2]), ext="csv", skip = 1)
+dfa$ab <- 1
+dfb$ab <- 2
+df <- rbind(dfa, dfb)
+# GO WIDE FORMAT?
+# PERMUTATION TESTING
+
+# for (d in dyadcond){
+#   for (p in physcond){
+#     for (t in timecond){
+#       dfa <- read_all_recordings('EDAcsv', pat=paste0(paircond[1], '_', dyadcond[d], '_', physcond[p], '.*', timecond[t]), ext="csv", skip = 1)
+#       dfa <- read_all_recordings('EDAcsv', pat=paste0(paircond[2], '_', dyadcond[d], '_', physcond[p], '.*', timecond[t]), ext="csv", skip = 1)
+#       # GO WIDE FORMAT?
+#       # SLIDING WINDOW CORRELATIONS
+#       # PERMUTATION TESTING
+#     }
+#   }
+# }
 
 ```
 
-## Including Plots
+# SLIDING WINDOW CORRELATIONS
 
-You can also embed plots, for example:
-
-```{r pressure, echo=FALSE}
-plot(pressure)
+```{r sldgwndw}
+library(evobiR)
+for (i in unique(df$Part)){
+  # df <- cbind(filter(dfa, Part == i), filter(dfb, Part == i))
+  df <- cbind(filter(dfa, Part == i)$scr, filter(dfb, Part == i)$scr)
+  
+}
 ```
 
 Note that the `echo = FALSE` parameter was added to the code chunk to prevent printing of the R code that generated the plot.

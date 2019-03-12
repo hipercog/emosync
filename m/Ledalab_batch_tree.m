@@ -2,7 +2,7 @@ function Ledalab_batch_tree(indir, downsamp, varargin)
 % Ledalab_batch_tree applies Ledalab batch processing to files across a tree
 % 
 % Syntax:
-%       Ledalab_batch_tree(wdir, filefilt, 'key', [value], ...)
+%       Ledalab_batch_tree(wdir, downsamp, 'key', [value], ...)
 %
 % Description: finds all EDA *.mat files from an experiment (that is, any
 %              file matching string 'filefilt' in any folder below 'indir')
@@ -13,7 +13,8 @@ function Ledalab_batch_tree(indir, downsamp, varargin)
 % Input:
 %   indir       string, root folder: all target files here or in any subfolder
 %                       (recursive) are returned for processing
-%   downsamp    int, factor to downsample by
+%   downsamp    int, factor to downsample by, required as input due to
+%                    difficulty of knowing sample rate a priori
 % 
 % Varargin:
 %   filt        string, part of filename to match subset of files for, e.g. 

@@ -1,5 +1,6 @@
-fs = dir('*.mat');
+fs = dir('DCVR*.mat');
 type = {'Ledaded' 'EDA' 'C+C12?' 'none'};
+good = zeros(numel(fs), 1);
 
 for i = 1:numel(fs)
     edachs = 0;
@@ -11,6 +12,10 @@ for i = 1:numel(fs)
        exist('fileinfo', 'var') &&...
        exist('data', 'var')
    
+        [edachs, samps] = size(data.conductance);
+        if samps == 3600 || samps == 1200 || samps == 300
+            good(i) = 1;
+        end
         clear analysis fileinfo data
         t = 1;
 
