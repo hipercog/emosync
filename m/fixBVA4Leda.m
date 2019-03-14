@@ -1,4 +1,8 @@
-fs = dir('DCVR*.mat');
+function good = fixBVA4Leda(ind, filt, ext, sizes)
+
+
+fs = dir(fullfile(ind, [filt, '*.' strrep(ext, '.', '')]));
+% fs = dir('DCVR*.mat');
 type = {'Ledaded' 'EDA' 'C+C12?' 'none'};
 good = zeros(numel(fs), 1);
 
@@ -13,7 +17,7 @@ for i = 1:numel(fs)
        exist('data', 'var')
    
         [edachs, samps] = size(data.conductance);
-        if samps == 3600 || samps == 1200 || samps == 300
+        if any(samps == sizes)
             good(i) = 1;
         end
         clear analysis fileinfo data
@@ -28,7 +32,7 @@ for i = 1:numel(fs)
        exist('t', 'var')
 
         save(fs(i).name, 'ChannelCount', 'Channels', 'EDA', 'MarkerCount'...
-                        , 'SampleRate', 'SegmentCount', 't', 'Markers')
+                        , 'SampleRate', 'SegmentCount', 't', 'Markers') %#ok<*USENS>
         [edachs, samps] = size(EDA);
         clear ChannelCount Channels EDA MarkerCount SampleRate SegmentCount t Markers
         t = 2;

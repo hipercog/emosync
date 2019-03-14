@@ -2,7 +2,7 @@
 % ROOTDIR = '/home/local/bcowley/Benslab/EMOSYNC/DYNECOM/EDAmat';
 ROOTDIR = './';
 FILT_STR = 'DCVR';
-FILT_MSK = logical(~good);
+FILT_MSK = logical(~allgood);
 
 MEASUREMENTS = dir(fullfile(ROOTDIR, [FILT_STR '*.mat']));
 MEASUREMENTS(FILT_MSK) = [];
@@ -20,7 +20,7 @@ for k = 1:length(MEASUREMENTS)
     
     file = load(fullfile(MEASUREMENTS(k).folder, MEASUREMENTS(k).name));
     [~, fname, ~] = fileparts(MEASUREMENTS(k).name);
-    
+     
     hdr = {'time', 'conductance', 'driver', 'scr', 'scl'};
     data = cat(2, file.data.time', ...
                   file.data.conductance', ...

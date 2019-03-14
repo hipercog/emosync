@@ -50,7 +50,7 @@ df <- rbind(dfa, dfb)
 
 ```{r sldgwndw}
 library(evobiR)
-for (i in unique(df$Part)){
+for (i in unique(  df$Part)){
   # df <- cbind(filter(dfa, Part == i), filter(dfb, Part == i))
   df <- cbind(filter(dfa, Part == i)$scr, filter(dfb, Part == i)$scr)
   
