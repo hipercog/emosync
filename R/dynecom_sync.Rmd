@@ -12,23 +12,103 @@ library(tidyverse)
 source('read_parse_era.R')
 ```
 
-# Code wrangling
+# CODE WRANGLING
 
+Here, as an example, we select condition *D, both, 6min*
+
+We collect _a_ and _b_ versions of the data (which are then bound together for convenience)
 
 ```{r wrangle}
 # List of conditions
+paircond <- c('a', 'b')
 dyadcond <- c('D', 'S')
 physcond <- c('both', 'eeg', 'resp', 'na')
 timecond <- c('BL', '30s', '6min')
-paircond <- c('a', 'b')
-subjs <- seq(1, 45)
 
-
-dfa <- read_all_recordings('EDAcsv', pat=paste0(paircond[1], '_', dyadcond[1], '_', physcond[1], '.*', timecond[2]), ext="csv", skip = 1)
-dfb <- read_all_recordings('EDAcsv', pat=paste0(paircond[2], '_', dyadcond[1], '_', physcond[1], '.*', timecond[2]), ext="csv", skip = 1)
+dfa <- read_all_recordings('EDAcsv', pat=paste0(paircond[1], '_', dyadcond[1], '_', physcond[1], '.*', timecond[3]), ext="csv", skip = 1)
+dfb <- read_all_recordings('EDAcsv', pat=paste0(paircond[2], '_', dyadcond[1], '_', physcond[1], '.*', timecond[3]), ext="csv", skip = 1)
 dfa$ab <- 1
 dfb$ab <- 2
 df <- rbind(dfa, dfb)
+
+subjs <- unique(df$Part)
+sbjix <- seq(1, length(subjs))
+```
+
+
+# SLIDING WINDOW CORRELATIONS
+
+Within each dyad, a sliding window median is taken for each signal, _a_ and _b_, and the Pearson correlation coefficient is obtained. This is extended to the combination of all with all, to obtain the correlation matrix displayed.
+
+The diagonal of the matrix (true dyad correlations) provides the test measurement. The diagonal is averaged (correlation aggregation is not needed because the number of elements per correlation is constant across dyads).
+
+```{r sldgwndw}
+library(RcppRoll)
+source('./../emosync/R/sync_functions.R')
+
+# pr1.1 <- corr_rollmed_1pr(df, 1, 1, "scr", 20, 10)
+# match.pairs <- corr_rollmed_allpr(df, "scr", 20, 10)
+match.allpr <- corr_rollmed_mat(df, "scr", 20, 10, FALSE)
+corr.allpr <- match.allpr$corr
+# match.count <- match.allpr$count
+
+# Aggregates
+avg.corr <- mean(diag(corr.allpr)) # for constant N, Hunter-Schmidt aggregation is equivalent to average correlation
+ab.av.cor <- mean(abs(diag(corr.allpr))) # for constant N, Hunter-Schmidt aggregation is equivalent to average correlation
+
+# show corr matrix
+library(reshape2)
+ggplot(data = melt(corr.allpr), aes(x=Var1, y=Var2, fill=value)) + 
+  geom_tile(color = "white") +
+  scale_fill_gradient2(low = "blue", high = "red", mid = "white", 
+                       midpoint = 0, limit = c(-1,1), space = "Lab", 
+                       name="Pearson\nCorrelation") +
+  theme_minimal() + 
+  theme(axis.text.x = element_text(angle = 45, vjust = 1, size = 12, hjust = 1))+
+  coord_fixed()
+
+```
+
+
+# MATRIX SAMPLING
+
+To obtain a random sample (without replacement) of the pair-wise correlations, we simply shuffle the columns of the correlation matrix, displayed.
+
+```{r matrix-sampling}
+samp <- sample_matrix(sbjix, corr.allpr, repl = FALSE)
+ggplot(data = melt(samp$sampmat), aes(x=Var1, y=Var2, fill=value)) + 
+  geom_tile(color = "white") +
+  scale_fill_gradient2(low = "blue", high = "red", mid = "white", 
+                       midpoint = 0, limit = c(-1,1), space = "Lab", 
+                       name="Pearson\nCorrelation") +
+  theme_minimal() + 
+  theme(axis.text.x = element_text(angle = 45, vjust = 1, size = 12, hjust = 1))+
+  coord_fixed()
+
+```
+
+
+# PERMUTATION TESTING
+
+To obtain a permutation test statistic, we repeat the random sampling 10000 times, generating a distribution of correlations. We plot the observed real correlation against the distribution to see the statistical difference of the obervation from a random distribution. It is not different. 
+
+```{r permutation}
+# tmp <- sampmat_diag_stat(mean, sbjix, corr.allpr)
+dist <- replicate(10000, sampmat_diag_stat(mean, sbjix, corr.allpr))
+hist(dist, col='black', breaks=100)
+abline(v=avg.corr, col='blue', lwd=2)
+
+```
+
+
+<!--
+```{r coinflippin}
+library(coin)
+```
+
+
+
+```{r LOOPIT}
 # GO WIDE FORMAT?
 # PERMUTATION TESTING
 
@@ -43,18 +123,5 @@ df <- rbind(dfa, dfb)
 #     }
 #   }
 # }
-
 ```
-
-# SLIDING WINDOW CORRELATIONS
-
-```{r sldgwndw}
-library(evobiR)
-for (i in unique(  df$Part)){
-  # df <- cbind(filter(dfa, Part == i), filter(dfb, Part == i))
-  df <- cbind(filter(dfa, Part == i)$scr, filter(dfb, Part == i)$scr)
-  
-}
-```
-
-Note that the `echo = FALSE` parameter was added to the code chunk to prevent printing of the R code that generated the plot.
+-->
