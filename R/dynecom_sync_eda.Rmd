@@ -1,0 +1,208 @@
+---
+title: "DYNECOM EDA synchrony"
+author: "Ben Cowley"
+date: "10 March 2019"
+output: html_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+knitr::opts_knit$set(root.dir = '/home/bcowley/Benslab/EMOSYNC/DYNECOM/')
+library(tidyverse)
+library(reshape2)
+library(RcppRoll)
+source('sync_functions.R')
+source('read_parse_era.R')
+```
+
+# PARAMETERS
+
+```{r params}
+# data-type parameters
+basepath <- 'EDAcsv'
+feature <- 'scr'
+# List of conditions
+paircond <- c('a', 'b')
+dyadcond <- c('D', 'S')
+physcond <- c('both', 'eeg', 'resp', 'na')
+timecond <- c('BL', '30s', '6min')
+# sliding window parameters
+wndw <- 40
+step <- wndw / 2 # 50% overlap steps
+method <- "var" # options are: max, mean, median, min, prod, sd, sum, var; see ?RcppRoll
+REPS <- 10000
+```
+
+# CODE WRANGLING
+
+Here, as an example, we select condition *D, both, 6min*
+We collect _a_ and _b_ versions of the data (which are then bound together for convenience)
+
+```{r wrangle}
+# Create the first dataset as an example
+cond_str <- paste0('_', dyadcond[1], '_', physcond[1], '.*', timecond[3])
+dfa <- read_all_recordings(basepath, pat=paste0(paircond[1], cond_str), ext="csv", skip = 1)
+dfb <- read_all_recordings(basepath, pat=paste0(paircond[2], cond_str), ext="csv", skip = 1)
+dfa$ab <- 1
+dfb$ab <- 2
+df <- rbind(dfa, dfb)
+
+subjs <- unique(df$Part)
+sbjix <- seq(1, length(subjs))
+```
+
+
+# SLIDING WINDOW CORRELATIONS
+
+Within each dyad, a sliding window median is taken for each signal, _a_ and _b_, and the Pearson correlation coefficient is obtained. This is extended to the combination of all with all, to obtain the correlation matrix displayed.
+
+The diagonal of the matrix (true dyad correlations) provides the test measurement. The diagonal is averaged (correlation aggregation is not needed because the number of elements per correlation is constant across dyads).
+
+```{r sldgwndw}
+# Db6m.pr1.1 <- corr_rollme_1pr(df, 1, 1, feature, wndw, step)
+# Db6m.corr <- corr_rollme_allpr(df, feature, wndw, step)
+
+Db6m.cormat <- corr_rollme_mat(df, feature, wndw, step, method, FALSE)
+Db6m.corr <- diag(Db6m.cormat$corr)
+# Db6m.count <- Db6m.cormat$count
+
+# Aggregates
+Db6m.avg.cor <- mean(Db6m.corr)   # for constant N, Hunter-Schmidt aggregation is equivalent to average correlation
+Db6m.abav.cor <- mean(abs(Db6m.corr)) # for constant N, Hunter-Schmidt aggregation is equivalent to average correlation
+
+# show corr matrix
+ggplot(data = melt(Db6m.cormat$corr), aes(x=Var1, y=Var2, fill=value)) + 
+  geom_tile(color = "white") +
+  scale_fill_gradient2(low = "blue", high = "red", mid = "white", 
+                       midpoint = 0, limit = c(-1,1), space = "Lab", 
+                       name="Pearson\nCorrelation") +
+  theme_minimal() + 
+  theme(axis.text.x = element_text(angle = 45, vjust = 1, size = 12, hjust = 1))+
+  coord_fixed()
+
+```
+
+
+# MATRIX SAMPLING
+
+To obtain a random sample (without replacement) of the pair-wise correlations, we simply shuffle the columns of the correlation matrix, displayed.
+
+```{r matrix-sampling}
+samp <- sample_matrix(Db6m.cormat$corr, repl = FALSE)
+ggplot(data = melt(samp$sampmat), aes(x=Var1, y=Var2, fill=value)) + 
+  geom_tile(color = "white") +
+  scale_fill_gradient2(low = "blue", high = "red", mid = "white", 
+                       midpoint = 0, limit = c(-1,1), space = "Lab", 
+                       name="Pearson\nCorrelation") +
+  theme_minimal() + 
+  theme(axis.text.x = element_text(angle = 45, vjust = 1, size = 12, hjust = 1))+
+  coord_fixed()
+
+```
+
+
+# PERMUTATION TESTING
+
+To obtain a permutation test statistic, we repeat the random sampling 10000 times, generating a distribution of correlations. We plot the observed real correlation against the distribution to see the statistical difference of the obervation from a random distribution. P values are obtained by counting how many permuted mean-differences are larger than the one we observed in our actual data. We can then divide this by the number of items in our permutation distribution.
+
+```{r permutation}
+# CONDITION D_both_6mins
+obsVrand_corr <- replicate(REPS, sampmat_diag_stat(mean, Db6m.cormat$corr))
+hist(obsVrand_corr, col='black', breaks=100, 
+     main = paste(cond_str, ", two-tailed p =", sum(abs(obsVrand_corr) > abs(Db6m.avg.cor)) / REPS))
+abline(v=Db6m.avg.cor, col='blue', lwd=2)
+```
+
+
+## OTHER DYADIC CONDITIONS
+
+
+```{r enumconds}
+# CONDITION D_eeg_6mins
+cond_str <- paste0(dyadcond[1], '_', physcond[2], '.*', timecond[3])
+patts <- c(paste0(paircond[1], '_', cond_str), paste0(paircond[2], '_', cond_str))
+De6m.cor <- cond2cormat(basepath, patts, feature, wndw, step, method, triangle = FALSE)
+# Permutation testing
+obsVrand_corr <- replicate(REPS, sampmat_diag_stat(mean, De6m.cor$cormat))
+hist(obsVrand_corr, col='black', breaks=100, 
+     main = paste(cond_str, ", two-tailed p =", sum(abs(obsVrand_corr) > abs(De6m.cor$avg.cor)) / REPS))
+abline(v=De6m.cor$avg.cor, col='blue', lwd=2)
+
+
+
+# CONDITION D_resp_6mins
+cond_str <- paste0(dyadcond[1], '_', physcond[3], '.*', timecond[3])
+patts <- c(paste0(paircond[1], '_', cond_str), paste0(paircond[2], '_', cond_str))
+Dr6m.cor <- cond2cormat(basepath, patts, feature, wndw, step, method, triangle = FALSE)
+# Permutation testing
+obsVrand_corr <- replicate(REPS, sampmat_diag_stat(mean, Dr6m.cor$cormat))
+hist(obsVrand_corr, col='black', breaks=100, 
+     main = paste(cond_str, ", two-tailed p =", sum(abs(obsVrand_corr) > abs(Dr6m.cor$avg.cor)) / REPS))
+abline(v=Dr6m.cor$avg.cor, col='blue', lwd=2)
+
+
+
+# CONDITION D_na_6mins
+cond_str <- paste0(dyadcond[1], '_', physcond[4], '.*', timecond[3])
+patts <- c(paste0(paircond[1], '_', cond_str), paste0(paircond[2], '_', cond_str))
+Dn6m.cor <- cond2cormat(basepath, patts, feature, wndw, step, method, triangle = FALSE)
+# Permutation testing
+obsVrand_corr <- replicate(REPS, sampmat_diag_stat(mean, Dn6m.cor$cormat))
+hist(obsVrand_corr, col='black', breaks=100, 
+     main = paste(cond_str, ", two-tailed p =", sum(abs(obsVrand_corr) > abs(Dn6m.cor$avg.cor)) / REPS))
+abline(v=Dn6m.cor$avg.cor, col='blue', lwd=2)
+```
+
+## ALL SOLO CONDITIONS
+
+
+```{r soloconds}
+# CONDITION S_both_6mins
+cond_str <- paste0(dyadcond[2], '_', physcond[1], '.*', timecond[3])
+patts <- c(paste0(paircond[1], '_', cond_str), paste0(paircond[2], '_', cond_str))
+Sb6m.cor <- cond2cormat(basepath, patts, feature, wndw, step, method, triangle = FALSE)
+# Permutation testing
+obsVrand_corr <- replicate(REPS, sampmat_diag_stat(mean, Sb6m.cor$cormat))
+hist(obsVrand_corr, col='black', breaks=100, 
+     main = paste(cond_str, ", two-tailed p =", sum(abs(obsVrand_corr) > abs(Sb6m.cor$avg.cor)) / REPS))
+abline(v=Sb6m.cor$avg.cor, col='blue', lwd=2)
+
+
+# CONDITION S_eeg_6mins
+cond_str <- paste0(dyadcond[2], '_', physcond[2], '.*', timecond[3])
+patts <- c(paste0(paircond[1], '_', cond_str), paste0(paircond[2], '_', cond_str))
+Se6m.cor <- cond2cormat(basepath, patts, feature, wndw, step, method, triangle = FALSE)
+# Permutation testing
+obsVrand_corr <- replicate(REPS, sampmat_diag_stat(mean, Se6m.cor$cormat))
+hist(obsVrand_corr, col='black', breaks=100, 
+     main = paste(cond_str, ", two-tailed p =", sum(abs(obsVrand_corr) > abs(Se6m.cor$avg.cor)) / REPS))
+abline(v=Se6m.cor$avg.cor, col='blue', lwd=2)
+
+
+# CONDITION S_resp_6mins
+cond_str <- paste0(dyadcond[2], '_', physcond[3], '.*', timecond[3])
+patts <- c(paste0(paircond[1], '_', cond_str), paste0(paircond[2], '_', cond_str))
+Sr6m.cor <- cond2cormat(basepath, patts, feature, wndw, step, method, triangle = FALSE)
+# Permutation testing
+obsVrand_corr <- replicate(REPS, sampmat_diag_stat(mean, Sr6m.cor$cormat))
+hist(obsVrand_corr, col='black', breaks=100, 
+     main = paste(cond_str, ", two-tailed p =", sum(abs(obsVrand_corr) > abs(Sr6m.cor$avg.cor)) / REPS))
+abline(v=Sr6m.cor$avg.cor, col='blue', lwd=2)
+
+
+# CONDITION S_na_6mins
+cond_str <- paste0(dyadcond[2], '_', physcond[4], '.*', timecond[3])
+patts <- c(paste0(paircond[1], '_', cond_str), paste0(paircond[2], '_', cond_str))
+Sn6m.cor <- cond2cormat(basepath, patts, feature, wndw, step, method, triangle = FALSE)
+# Permutation testing
+obsVrand_corr <- replicate(REPS, sampmat_diag_stat(mean, Sn6m.cor$cormat))
+hist(obsVrand_corr, col='black', breaks=100, 
+     main = paste(cond_str, ", two-tailed p =", sum(abs(obsVrand_corr) > abs(Sn6m.cor$avg.cor)) / REPS))
+abline(v=Sn6m.cor$avg.cor, col='blue', lwd=2)
+```
+
+<!--
+```{r coinflippin}
+library(coin)
+```
+-->
