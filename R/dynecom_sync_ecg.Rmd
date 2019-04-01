@@ -1,0 +1,222 @@
+---
+title: "DYNECOM ECG synchrony"
+author: "Ben Cowley"
+date: "26 March 2019"
+output: html_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+knitr::opts_knit$set(root.dir = '/home/bcowley/Benslab/EMOSYNC/DYNECOM/')
+library(tidyverse)
+library(reshape2)
+library(corrplot)
+source('sync_functions.R')
+source('read_parse_data.R')
+```
+
+# PARAMETERS
+
+```{r params}
+# data-type parameters
+basepath <- 'HRVcsv/'
+feature <- 'rmssd' # OR stdevhr
+# List of conditions
+paircond <- c('a', 'b')
+dyadcond <- c('D', 'S')
+physcond <- c('both', 'eeg', 'resp', 'na')
+timecond <- c('BL', '30s', '6min')
+# Correlation method
+cormeth <- 'kendall'
+# # sliding window parameters
+# wndw <- 60
+# step <- wndw / 2 # 50% overlap steps
+# method <- "mean" # options are: max, mean, median, min, prod, sd, sum, var; see ?RcppRoll
+REPS <- 10000
+```
+
+# CODE WRANGLING
+
+Here, as an example, we select condition *D, both, 6min*
+We collect _a_ and _b_ versions of the data (which are then bound together for convenience)
+
+```{r wrangle}
+# Create the first dataset as an example
+cond_str <- paste0('_', dyadcond[1], '_', physcond[1], '.*', timecond[3])
+dfa <- read_all_recordings(basepath, pat=paste0(paircond[1], cond_str), ext="csv")
+dfb <- read_all_recordings(basepath, pat=paste0(paircond[2], cond_str), ext="csv")
+dfa$ab <- 1
+dfb$ab <- 2
+df <- rbind(dfa, dfb)
+
+subjs <- unique(df$Part)
+sbjix <- seq(1, length(subjs))
+```
+
+
+# CORRELATION MATRICES
+
+We don't apply sliding window smoothing to HRV data because it already comes from a sliding window algorithm applied to the IBI signal, which is itself a dimensional reduction from the raw ECG signal.
+
+Thus we calculate a correlation matrix for the given HRV signal, based on the Pearson correlation coefficient of _a_ and _b_ and the combination of all with all. The correlation matrix is displayed below.
+
+The diagonal of the matrix (true dyad correlations) provides the test measurement. The diagonal is averaged (correlation aggregation is not needed because the number of elements per correlation is constant across dyads).
+
+```{r cormat}
+Db6m.cormat <- corr_mat(df, feature, meth = cormeth)
+
+Db6m.corr <- diag(Db6m.cormat$corr)
+# Db6m.count <- Db6m.cormat$count
+
+# Aggregates
+Db6m.avg.cor <- mean(Db6m.corr)   # for constant N, Hunter-Schmidt aggregation is equivalent to average correlation
+Db6m.abav.cor <- mean(abs(Db6m.corr)) # for constant N, Hunter-Schmidt aggregation is equivalent to average correlation
+
+# show corr matrix
+plot_rwb_cormat(Db6m.cormat$corr)
+
+```
+
+
+# MATRIX SAMPLING
+
+To obtain a random sample (without replacement) of the pair-wise correlations, we simply shuffle the columns of the correlation matrix, displayed.
+
+```{r matrix-sampling}
+samp <- sample_matrix(Db6m.cormat$corr, repl = FALSE)
+plot_rwb_cormat(samp$sampmat)
+```
+
+
+# PERMUTATION TESTING
+
+To obtain a permutation test statistic, we repeat the random sampling 10000 times, generating a distribution of correlations. We plot the observed real correlation against the distribution to see the statistical difference of the obervation from a random distribution. P values are obtained by counting how many permuted mean-differences are larger than the one we observed in our actual data. We can then divide this by the number of items in our permutation distribution.
+
+```{r permutation}
+# CONDITION D_both_6mins
+obsVrand_corr <- replicate(REPS, sampmat_diag_stat(mean, Db6m.cormat$corr))
+hist(obsVrand_corr, col='black', breaks=100, 
+     main = paste(cond_str, ", two-tailed p =", sum(abs(obsVrand_corr) > abs(Db6m.avg.cor)) / REPS))
+abline(v=Db6m.avg.cor, col='blue', lwd=2)
+```
+
+
+## OTHER DYADIC CONDITIONS
+
+
+```{r enumconds}
+# CONDITION D_eeg_6mins
+cond_str <- paste0(dyadcond[1], '_', physcond[2], '.*', timecond[3])
+patts <- c(paste0(paircond[1], '_', cond_str), paste0(paircond[2], '_', cond_str))
+De6m.cor <- cond2cormat(basepath, patts, feature, cormeth, triangle = FALSE)
+# Permutation testing
+obsVrand_corr <- replicate(REPS, sampmat_diag_stat(mean, De6m.cor$cormat))
+hist(obsVrand_corr, col='black', breaks=100, 
+     main = paste(cond_str, ", two-tailed p =", sum(abs(obsVrand_corr) > abs(De6m.cor$avg.cor)) / REPS))
+abline(v=De6m.cor$avg.cor, col='blue', lwd=2)
+
+
+
+# CONDITION D_resp_6mins
+cond_str <- paste0(dyadcond[1], '_', physcond[3], '.*', timecond[3])
+patts <- c(paste0(paircond[1], '_', cond_str), paste0(paircond[2], '_', cond_str))
+Dr6m.cor <- cond2cormat(basepath, patts, feature, cormeth, triangle = FALSE)
+# Permutation testing
+obsVrand_corr <- replicate(REPS, sampmat_diag_stat(mean, Dr6m.cor$cormat))
+hist(obsVrand_corr, col='black', breaks=100, 
+     main = paste(cond_str, ", two-tailed p =", sum(abs(obsVrand_corr) > abs(Dr6m.cor$avg.cor)) / REPS))
+abline(v=Dr6m.cor$avg.cor, col='blue', lwd=2)
+
+
+
+# CONDITION D_na_6mins
+cond_str <- paste0(dyadcond[1], '_', physcond[4], '.*', timecond[3])
+patts <- c(paste0(paircond[1], '_', cond_str), paste0(paircond[2], '_', cond_str))
+Dn6m.cor <- cond2cormat(basepath, patts, feature, cormeth, triangle = FALSE)
+# Permutation testing
+obsVrand_corr <- replicate(REPS, sampmat_diag_stat(mean, Dn6m.cor$cormat))
+hist(obsVrand_corr, col='black', breaks=100, 
+     main = paste(cond_str, ", two-tailed p =", sum(abs(obsVrand_corr) > abs(Dn6m.cor$avg.cor)) / REPS))
+abline(v=Dn6m.cor$avg.cor, col='blue', lwd=2)
+```
+
+## ALL SOLO CONDITIONS
+
+
+```{r soloconds}
+# CONDITION S_both_6mins
+cond_str <- paste0(dyadcond[2], '_', physcond[1], '.*', timecond[3])
+patts <- c(paste0(paircond[1], '_', cond_str), paste0(paircond[2], '_', cond_str))
+Sb6m.cor <- cond2cormat(basepath, patts, feature, cormeth, triangle = FALSE)
+# Permutation testing
+obsVrand_corr <- replicate(REPS, sampmat_diag_stat(mean, Sb6m.cor$cormat))
+hist(obsVrand_corr, col='black', breaks=100, 
+     main = paste(cond_str, ", two-tailed p =", sum(abs(obsVrand_corr) > abs(Sb6m.cor$avg.cor)) / REPS))
+abline(v=Sb6m.cor$avg.cor, col='blue', lwd=2)
+
+
+# CONDITION S_eeg_6mins
+cond_str <- paste0(dyadcond[2], '_', physcond[2], '.*', timecond[3])
+patts <- c(paste0(paircond[1], '_', cond_str), paste0(paircond[2], '_', cond_str))
+Se6m.cor <- cond2cormat(basepath, patts, feature, cormeth, triangle = FALSE)
+# Permutation testing
+obsVrand_corr <- replicate(REPS, sampmat_diag_stat(mean, Se6m.cor$cormat))
+hist(obsVrand_corr, col='black', breaks=100, 
+     main = paste(cond_str, ", two-tailed p =", sum(abs(obsVrand_corr) > abs(Se6m.cor$avg.cor)) / REPS))
+abline(v=Se6m.cor$avg.cor, col='blue', lwd=2)
+
+
+# CONDITION S_resp_6mins
+cond_str <- paste0(dyadcond[2], '_', physcond[3], '.*', timecond[3])
+patts <- c(paste0(paircond[1], '_', cond_str), paste0(paircond[2], '_', cond_str))
+Sr6m.cor <- cond2cormat(basepath, patts, feature, cormeth, triangle = FALSE)
+# Permutation testing
+obsVrand_corr <- replicate(REPS, sampmat_diag_stat(mean, Sr6m.cor$cormat))
+hist(obsVrand_corr, col='black', breaks=100, 
+     main = paste(cond_str, ", two-tailed p =", sum(abs(obsVrand_corr) > abs(Sr6m.cor$avg.cor)) / REPS))
+abline(v=Sr6m.cor$avg.cor, col='blue', lwd=2)
+
+
+# CONDITION S_na_6mins
+cond_str <- paste0(dyadcond[2], '_', physcond[4], '.*', timecond[3])
+patts <- c(paste0(paircond[1], '_', cond_str), paste0(paircond[2], '_', cond_str))
+Sn6m.cor <- cond2cormat(basepath, patts, feature, cormeth, triangle = FALSE)
+# Permutation testing
+obsVrand_corr <- replicate(REPS, sampmat_diag_stat(mean, Sn6m.cor$cormat))
+hist(obsVrand_corr, col='black', breaks=100, 
+     main = paste(cond_str, ", two-tailed p =", sum(abs(obsVrand_corr) > abs(Sn6m.cor$avg.cor)) / REPS))
+abline(v=Sn6m.cor$avg.cor, col='blue', lwd=2)
+```
+
+
+
+## RELATION TO SELF-REPORTS
+
+Read Simo's csv file and create linear regression on S.na synchrony data
+
+```{r selfrep}
+df <- read.csv('dynecom_Data.csv')
+srep.sbjix <- sort(unique(df$PairID))
+
+# DEALING WITH THE D-EEG CONDITION RESULT FIRST
+df.Deeg.a <- df %>% filter(Scenario == 2 & AorB == 1)
+df.Deeg.a$sync <- De6m.cor$corrs
+df.Deeg.b <- df %>% filter(Scenario == 2 & AorB == 2)
+df.Deeg.b$sync <- De6m.cor$corrs
+df.Deeg <- rbind(df.Deeg.a, df.Deeg.b)
+
+df.Deeg.mdl <- lm(sync ~ Batson_empathy + inter_arousal + inter_dominance + inter_valence + interCP + interPAI + interPAU + Relationship_legth_mean + Closeness_mean + Sex, data = df.Deeg)
+summary(df.Deeg.mdl)
+
+
+# DEALING WITH THE D-RESP CONDITION RESULT
+df.Drsp.a <- df %>% filter(Scenario == 2 & AorB == 1)
+df.Drsp.a$sync <- De6m.cor$corrs
+df.Drsp.b <- df %>% filter(Scenario == 2 & AorB == 2)
+df.Drsp.b$sync <- De6m.cor$corrs
+df.Drsp <- rbind(df.Drsp.a, df.Drsp.b)
+
+df.Drsp.mdl <- lm(sync ~ Batson_empathy + inter_arousal + inter_dominance + inter_valence + interCP + interPAI + interPAU + Relationship_legth_mean + Closeness_mean + Sex, data = df.Drsp)
+summary(df.Drsp.mdl)
+
+```
