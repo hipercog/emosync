@@ -9,7 +9,8 @@ output: html_document
 knitr::opts_chunk$set(echo = TRUE)
 knitr::opts_knit$set(root.dir = '/home/bcowley/Benslab/EMOSYNC/DYNECOM/')
 library(tidyverse)
-source('read_parse_era.R')
+source('./read_parse_era.R')
+source('./sync_functions.R')
 ```
 
 # CODE WRANGLING
@@ -44,7 +45,6 @@ The diagonal of the matrix (true dyad correlations) provides the test measuremen
 
 ```{r sldgwndw}
 library(RcppRoll)
-source('./../emosync/R/sync_functions.R')
 
 # pr1.1 <- corr_rollmed_1pr(df, 1, 1, "scr", 20, 10)
 # match.pairs <- corr_rollmed_allpr(df, "scr", 20, 10)
