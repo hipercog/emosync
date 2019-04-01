@@ -12,7 +12,7 @@ library(tidyverse)
 library(reshape2)
 library(RcppRoll)
 source('sync_functions.R')
-source('read_parse_era.R')
+source('read_parse_data.R')
 ```
 
 # PARAMETERS
@@ -21,6 +21,8 @@ source('read_parse_era.R')
 # data-type parameters
 basepath <- 'EDAcsv'
 feature <- 'scr'
+centr <- TRUE
+skale <- TRUE
 # List of conditions
 paircond <- c('a', 'b')
 dyadcond <- c('D', 'S')
@@ -29,7 +31,7 @@ timecond <- c('BL', '30s', '6min')
 # sliding window parameters
 wndw <- 40
 step <- wndw / 2 # 50% overlap steps
-method <- "var" # options are: max, mean, median, min, prod, sd, sum, var; see ?RcppRoll
+method <- "sd" # options are: max, mean, median, min, prod, sd, sum, var; see ?RcppRoll
 REPS <- 10000
 ```
 
@@ -59,10 +61,10 @@ Within each dyad, a sliding window median is taken for each signal, _a_ and _b_,
 The diagonal of the matrix (true dyad correlations) provides the test measurement. The diagonal is averaged (correlation aggregation is not needed because the number of elements per correlation is constant across dyads).
 
 ```{r sldgwndw}
-# Db6m.pr1.1 <- corr_rollme_1pr(df, 1, 1, feature, wndw, step)
+Db6m.pr1.1 <- corr_rollme_1pr(df, 1, 1, feature, wndw, step, CTR = centr, SCL = skale)
 # Db6m.corr <- corr_rollme_allpr(df, feature, wndw, step)
 
-Db6m.cormat <- corr_rollme_mat(df, feature, wndw, step, method, FALSE)
+Db6m.cormat <- corr_rollme_mat(df, feature, wndw, step, method, FALSE, CTR = centr, SCL = skale)
 Db6m.corr <- diag(Db6m.cormat$corr)
 # Db6m.count <- Db6m.cormat$count
 
@@ -121,7 +123,7 @@ abline(v=Db6m.avg.cor, col='blue', lwd=2)
 # CONDITION D_eeg_6mins
 cond_str <- paste0(dyadcond[1], '_', physcond[2], '.*', timecond[3])
 patts <- c(paste0(paircond[1], '_', cond_str), paste0(paircond[2], '_', cond_str))
-De6m.cor <- cond2cormat(basepath, patts, feature, wndw, step, method, triangle = FALSE)
+De6m.cor <- cond2rollcormat(basepath, patts, feature, wndw, step, method, triangle = FALSE, CTR = centr, SCL = skale)
 # Permutation testing
 obsVrand_corr <- replicate(REPS, sampmat_diag_stat(mean, De6m.cor$cormat))
 hist(obsVrand_corr, col='black', breaks=100, 
@@ -133,7 +135,7 @@ abline(v=De6m.cor$avg.cor, col='blue', lwd=2)
 # CONDITION D_resp_6mins
 cond_str <- paste0(dyadcond[1], '_', physcond[3], '.*', timecond[3])
 patts <- c(paste0(paircond[1], '_', cond_str), paste0(paircond[2], '_', cond_str))
-Dr6m.cor <- cond2cormat(basepath, patts, feature, wndw, step, method, triangle = FALSE)
+Dr6m.cor <- cond2rollcormat(basepath, patts, feature, wndw, step, method, triangle = FALSE, CTR = centr, SCL = skale)
 # Permutation testing
 obsVrand_corr <- replicate(REPS, sampmat_diag_stat(mean, Dr6m.cor$cormat))
 hist(obsVrand_corr, col='black', breaks=100, 
@@ -145,7 +147,7 @@ abline(v=Dr6m.cor$avg.cor, col='blue', lwd=2)
 # CONDITION D_na_6mins
 cond_str <- paste0(dyadcond[1], '_', physcond[4], '.*', timecond[3])
 patts <- c(paste0(paircond[1], '_', cond_str), paste0(paircond[2], '_', cond_str))
-Dn6m.cor <- cond2cormat(basepath, patts, feature, wndw, step, method, triangle = FALSE)
+Dn6m.cor <- cond2rollcormat(basepath, patts, feature, wndw, step, method, triangle = FALSE, CTR = centr, SCL = skale)
 # Permutation testing
 obsVrand_corr <- replicate(REPS, sampmat_diag_stat(mean, Dn6m.cor$cormat))
 hist(obsVrand_corr, col='black', breaks=100, 
@@ -160,7 +162,7 @@ abline(v=Dn6m.cor$avg.cor, col='blue', lwd=2)
 # CONDITION S_both_6mins
 cond_str <- paste0(dyadcond[2], '_', physcond[1], '.*', timecond[3])
 patts <- c(paste0(paircond[1], '_', cond_str), paste0(paircond[2], '_', cond_str))
-Sb6m.cor <- cond2cormat(basepath, patts, feature, wndw, step, method, triangle = FALSE)
+Sb6m.cor <- cond2rollcormat(basepath, patts, feature, wndw, step, method, triangle = FALSE, CTR = centr, SCL = skale)
 # Permutation testing
 obsVrand_corr <- replicate(REPS, sampmat_diag_stat(mean, Sb6m.cor$cormat))
 hist(obsVrand_corr, col='black', breaks=100, 
@@ -171,7 +173,7 @@ abline(v=Sb6m.cor$avg.cor, col='blue', lwd=2)
 # CONDITION S_eeg_6mins
 cond_str <- paste0(dyadcond[2], '_', physcond[2], '.*', timecond[3])
 patts <- c(paste0(paircond[1], '_', cond_str), paste0(paircond[2], '_', cond_str))
-Se6m.cor <- cond2cormat(basepath, patts, feature, wndw, step, method, triangle = FALSE)
+Se6m.cor <- cond2rollcormat(basepath, patts, feature, wndw, step, method, triangle = FALSE, CTR = centr, SCL = skale)
 # Permutation testing
 obsVrand_corr <- replicate(REPS, sampmat_diag_stat(mean, Se6m.cor$cormat))
 hist(obsVrand_corr, col='black', breaks=100, 
@@ -182,7 +184,7 @@ abline(v=Se6m.cor$avg.cor, col='blue', lwd=2)
 # CONDITION S_resp_6mins
 cond_str <- paste0(dyadcond[2], '_', physcond[3], '.*', timecond[3])
 patts <- c(paste0(paircond[1], '_', cond_str), paste0(paircond[2], '_', cond_str))
-Sr6m.cor <- cond2cormat(basepath, patts, feature, wndw, step, method, triangle = FALSE)
+Sr6m.cor <- cond2rollcormat(basepath, patts, feature, wndw, step, method, triangle = FALSE, CTR = centr, SCL = skale)
 # Permutation testing
 obsVrand_corr <- replicate(REPS, sampmat_diag_stat(mean, Sr6m.cor$cormat))
 hist(obsVrand_corr, col='black', breaks=100, 
@@ -193,7 +195,7 @@ abline(v=Sr6m.cor$avg.cor, col='blue', lwd=2)
 # CONDITION S_na_6mins
 cond_str <- paste0(dyadcond[2], '_', physcond[4], '.*', timecond[3])
 patts <- c(paste0(paircond[1], '_', cond_str), paste0(paircond[2], '_', cond_str))
-Sn6m.cor <- cond2cormat(basepath, patts, feature, wndw, step, method, triangle = FALSE)
+Sn6m.cor <- cond2rollcormat(basepath, patts, feature, wndw, step, method, triangle = FALSE, CTR = centr, SCL = skale)
 # Permutation testing
 obsVrand_corr <- replicate(REPS, sampmat_diag_stat(mean, Sn6m.cor$cormat))
 hist(obsVrand_corr, col='black', breaks=100, 
@@ -201,8 +203,23 @@ hist(obsVrand_corr, col='black', breaks=100,
 abline(v=Sn6m.cor$avg.cor, col='blue', lwd=2)
 ```
 
-<!--
-```{r coinflippin}
-library(coin)
+
+## RELATION TO SELF-REPORTS
+
+Read Simo's csv file and create linear regression on S.na synchrony data
+
+```{r selfrep}
+df <- read.csv('dynecom_Data.csv')
+srep.sbjix <- sort(unique(df$PairID))
+
+# DEALING WITH THE EDA RESULT CONDITION FIRST
+df.Sna.a <- df %>% filter(Scenario == 5 & AorB == 1)
+df.Sna.a$sync <- Sn6m.cor$corrs
+df.Sna.b <- df %>% filter(Scenario == 5 & AorB == 2)
+df.Sna.b$sync <- Sn6m.cor$corrs
+df.Sna <- rbind(df.Sna.a, df.Sna.b)
+
+df.Sna.mdl <- lm(sync ~ Batson_empathy + inter_arousal + inter_dominance + inter_valence + interCP + interPAI + interPAU + Relationship_legth_mean + Closeness_mean + Sex, data = df.Sna)
+summary(df.Sna.mdl)
+
 ```
--->
