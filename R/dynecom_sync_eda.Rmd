@@ -11,6 +11,7 @@ knitr::opts_knit$set(root.dir = '/home/bcowley/Benslab/EMOSYNC/DYNECOM/')
 library(tidyverse)
 library(reshape2)
 library(RcppRoll)
+library(DAAG)
 source('sync_functions.R')
 source('read_parse_data.R')
 ```
@@ -222,4 +223,27 @@ df.Sna <- rbind(df.Sna.a, df.Sna.b)
 df.Sna.mdl <- lm(sync ~ Batson_empathy + inter_arousal + inter_dominance + inter_valence + interCP + interPAI + interPAU + Relationship_legth_mean + Closeness_mean + Sex, data = df.Sna)
 summary(df.Sna.mdl)
 
+```
+
+
+## DIFFERENCE OF CONDITIONS
+
+Check the statistical significance of difference in synchrony between conditions. We do this by subtracting correlation vector of one condition from the other condition, then performing one-sample t-test and permutation test of difference from zero. We take the subtraction in the direction of our hypothesis of which is greater: for example, we expect synchrony to be higher in Dyad than Solo condition, so we test (Dyad - Solo).
+
+```{r compareCond}
+DSboth <- Db6m.corr - Sb6m.cor
+t.test(DSboth)
+onet.permutation(DSboth)
+
+DSeeg <- De6m.corr - Se6m.cor
+t.test(DSeeg)
+onet.permutation(DSeeg)
+
+DSresp <- Dr6m.corr - Sr6m.cor
+t.test(DSresp)
+onet.permutation(DSresp)
+
+DSnone <- Dn6m.corr - Sn6m.cor
+t.test(DSnone)
+onet.permutation(DSnone)
 ```
