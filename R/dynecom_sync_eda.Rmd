@@ -64,7 +64,7 @@ The diagonal of the matrix (true dyad correlations) provides the test measuremen
 Db6m.pr1.1 <- corr_rollme_1pr(df, 1, 1, feature, wndw, step, CTR = centr, SCL = skale)
 # Db6m.corr <- corr_rollme_allpr(df, feature, wndw, step)
 
-Db6m.cormat <- corr_rollme_mat(df, feature, wndw, step, method, FALSE, CTR = centr, SCL = skale)
+Db6m.cormat <- corr_rollme_mat(df, feature, wndw, step, method, CTR = centr, SCL = skale)
 Db6m.corr <- diag(Db6m.cormat$corr)
 # Db6m.count <- Db6m.cormat$count
 
@@ -73,14 +73,7 @@ Db6m.avg.cor <- mean(Db6m.corr)   # for constant N, Hunter-Schmidt aggregation i
 Db6m.abav.cor <- mean(abs(Db6m.corr)) # for constant N, Hunter-Schmidt aggregation is equivalent to average correlation
 
 # show corr matrix
-ggplot(data = melt(Db6m.cormat$corr), aes(x=Var1, y=Var2, fill=value)) + 
-  geom_tile(color = "white") +
-  scale_fill_gradient2(low = "blue", high = "red", mid = "white", 
-                       midpoint = 0, limit = c(-1,1), space = "Lab", 
-                       name="Pearson\nCorrelation") +
-  theme_minimal() + 
-  theme(axis.text.x = element_text(angle = 45, vjust = 1, size = 12, hjust = 1))+
-  coord_fixed()
+plot_rwb_cormat(Db6m.cormat$corr)
 
 ```
 
@@ -91,15 +84,7 @@ To obtain a random sample (without replacement) of the pair-wise correlations, w
 
 ```{r matrix-sampling}
 samp <- sample_matrix(Db6m.cormat$corr, repl = FALSE)
-ggplot(data = melt(samp$sampmat), aes(x=Var1, y=Var2, fill=value)) + 
-  geom_tile(color = "white") +
-  scale_fill_gradient2(low = "blue", high = "red", mid = "white", 
-                       midpoint = 0, limit = c(-1,1), space = "Lab", 
-                       name="Pearson\nCorrelation") +
-  theme_minimal() + 
-  theme(axis.text.x = element_text(angle = 45, vjust = 1, size = 12, hjust = 1))+
-  coord_fixed()
-
+plot_rwb_cormat(samp$sampmat)
 ```
 
 
