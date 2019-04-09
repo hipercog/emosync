@@ -161,22 +161,25 @@ intersect_read <- function(base, patts, SKP = 0)
 cond2rollcormat <- function(base, patts, feat, wndw, step, rollmeth = "median", triangle = FALSE, CTR = FALSE, SCL = FALSE) 
 {
   df <- intersect_read(base, patts, 1)
+  subjs <- unique(df$Part)
   cormat <- corr_rollme_mat(df, feat, wndw, step, rollmeth, triangle, CTR = centr, SCL = skale)
   corrs <- diag(cormat$corr)
   avg.cor <- mean(corrs)
   
-  return(list("cormat" = cormat$corr, "corrs" = corrs, "avg.cor" = avg.cor))
+  return(list("cormat" = cormat$corr, "corrs" = corrs, "avg.cor" = avg.cor, "subjs" = subjs))
 }
 
 
 cond2cormat <- function(base, patts, feat, cormeth, triangle = FALSE)
 {
   df <- intersect_read(base, patts)
+  subjs <- unique(df$Part)
   cormat <- corr_mat(df, feat, triangle, cormeth)
   corrs <- diag(cormat$corr)
   avg.cor <- mean(corrs)
   
-  return(list("cormat" = cormat$corr, "corrs" = corrs, "avg.cor" = avg.cor))
+  return(list("cormat" = cormat$corr, "corrs" = corrs, "avg.cor" = avg.cor, "subjs" = subjs))
+  # return(list("cormat" = cormat$corr, "corrs" = corrs, "avg.cor" = avg.cor))
 }
 
 

@@ -1,7 +1,7 @@
 ---
-title: "DYNECOM EDA synchrony"
+title: "DYNECOM ECG synchrony"
 author: "Ben Cowley"
-date: "10 March 2019"
+date: "26 March 2019"
 output: html_document
 ---
 
@@ -10,8 +10,9 @@ knitr::opts_chunk$set(echo = TRUE)
 knitr::opts_knit$set(root.dir = '/home/bcowley/Benslab/EMOSYNC/DYNECOM/')
 library(tidyverse)
 library(reshape2)
-library(RcppRoll)
+library(corrplot)
 library(DAAG)
+library(cocor)
 source('sync_functions.R')
 source('read_parse_data.R')
 ```
@@ -20,19 +21,19 @@ source('read_parse_data.R')
 
 ```{r params}
 # data-type parameters
-basepath <- 'EDAcsv'
-feature <- 'scr'
-centr <- TRUE
-skale <- TRUE
+basepath <- 'HRVcsv/'
+feature <- 'rmssd' # OR stdevhr
 # List of conditions
 paircond <- c('a', 'b')
 dyadcond <- c('D', 'S')
 physcond <- c('both', 'eeg', 'resp', 'na')
 timecond <- c('BL', '30s', '6min')
-# sliding window parameters
-wndw <- 40
-step <- wndw / 2 # 50% overlap steps
-method <- "sd" # options are: max, mean, median, min, prod, sd, sum, var; see ?RcppRoll
+# Correlation method
+cormeth <- 'kendall'
+# # sliding window parameters
+# wndw <- 60
+# step <- wndw / 2 # 50% overlap steps
+# method <- "mean" # options are: max, mean, median, min, prod, sd, sum, var; see ?RcppRoll
 REPS <- 10000
 ```
 
@@ -44,8 +45,8 @@ We collect _a_ and _b_ versions of the data (which are then bound together for c
 ```{r wrangle}
 # Create the first dataset as an example
 cond_str <- paste0('_', dyadcond[1], '_', physcond[1], '.*', timecond[3])
-dfa <- read_all_recordings(basepath, pat=paste0(paircond[1], cond_str), ext="csv", skip = 1)
-dfb <- read_all_recordings(basepath, pat=paste0(paircond[2], cond_str), ext="csv", skip = 1)
+dfa <- read_all_recordings(basepath, pat=paste0(paircond[1], cond_str), ext="csv")
+dfb <- read_all_recordings(basepath, pat=paste0(paircond[2], cond_str), ext="csv")
 dfa$ab <- 1
 dfb$ab <- 2
 df <- rbind(dfa, dfb)
@@ -55,17 +56,17 @@ sbjix <- seq(1, length(subjs))
 ```
 
 
-# SLIDING WINDOW CORRELATIONS
+# CORRELATION MATRICES
 
-Within each dyad, a sliding window median is taken for each signal, _a_ and _b_, and the Pearson correlation coefficient is obtained. This is extended to the combination of all with all, to obtain the correlation matrix displayed.
+We don't apply sliding window smoothing to HRV data because it already comes from a sliding window algorithm applied to the IBI signal, which is itself a dimensional reduction from the raw ECG signal.
+
+Thus we calculate a correlation matrix for the given HRV signal, based on the Pearson correlation coefficient of _a_ and _b_ and the combination of all with all. The correlation matrix is displayed below.
 
 The diagonal of the matrix (true dyad correlations) provides the test measurement. The diagonal is averaged (correlation aggregation is not needed because the number of elements per correlation is constant across dyads).
 
-```{r sldgwndw}
-Db6m.pr1.1 <- corr_rollme_1pr(df, 1, 1, feature, wndw, step, CTR = centr, SCL = skale)
-# Db6m.corr <- corr_rollme_allpr(df, feature, wndw, step)
+```{r cormat}
+Db6m.cormat <- corr_mat(df, feature, meth = cormeth)
 
-Db6m.cormat <- corr_rollme_mat(df, feature, wndw, step, method, CTR = centr, SCL = skale)
 Db6m.corr <- diag(Db6m.cormat$corr)
 # Db6m.count <- Db6m.cormat$count
 
@@ -109,7 +110,7 @@ abline(v=Db6m.avg.cor, col='blue', lwd=2)
 # CONDITION D_eeg_6mins
 cond_str <- paste0(dyadcond[1], '_', physcond[2], '.*', timecond[3])
 patts <- c(paste0(paircond[1], '_', cond_str), paste0(paircond[2], '_', cond_str))
-De6m.cor <- cond2rollcormat(basepath, patts, feature, wndw, step, method, triangle = FALSE, CTR = centr, SCL = skale)
+De6m.cor <- cond2cormat(basepath, patts, feature, cormeth, triangle = FALSE)
 # Permutation testing
 obsVrand_corr <- replicate(REPS, sampmat_diag_stat(mean, De6m.cor$cormat))
 hist(obsVrand_corr, col='black', breaks=100, 
@@ -121,7 +122,7 @@ abline(v=De6m.cor$avg.cor, col='blue', lwd=2)
 # CONDITION D_resp_6mins
 cond_str <- paste0(dyadcond[1], '_', physcond[3], '.*', timecond[3])
 patts <- c(paste0(paircond[1], '_', cond_str), paste0(paircond[2], '_', cond_str))
-Dr6m.cor <- cond2rollcormat(basepath, patts, feature, wndw, step, method, triangle = FALSE, CTR = centr, SCL = skale)
+Dr6m.cor <- cond2cormat(basepath, patts, feature, cormeth, triangle = FALSE)
 # Permutation testing
 obsVrand_corr <- replicate(REPS, sampmat_diag_stat(mean, Dr6m.cor$cormat))
 hist(obsVrand_corr, col='black', breaks=100, 
@@ -133,7 +134,7 @@ abline(v=Dr6m.cor$avg.cor, col='blue', lwd=2)
 # CONDITION D_na_6mins
 cond_str <- paste0(dyadcond[1], '_', physcond[4], '.*', timecond[3])
 patts <- c(paste0(paircond[1], '_', cond_str), paste0(paircond[2], '_', cond_str))
-Dn6m.cor <- cond2rollcormat(basepath, patts, feature, wndw, step, method, triangle = FALSE, CTR = centr, SCL = skale)
+Dn6m.cor <- cond2cormat(basepath, patts, feature, cormeth, triangle = FALSE)
 # Permutation testing
 obsVrand_corr <- replicate(REPS, sampmat_diag_stat(mean, Dn6m.cor$cormat))
 hist(obsVrand_corr, col='black', breaks=100, 
@@ -148,7 +149,7 @@ abline(v=Dn6m.cor$avg.cor, col='blue', lwd=2)
 # CONDITION S_both_6mins
 cond_str <- paste0(dyadcond[2], '_', physcond[1], '.*', timecond[3])
 patts <- c(paste0(paircond[1], '_', cond_str), paste0(paircond[2], '_', cond_str))
-Sb6m.cor <- cond2rollcormat(basepath, patts, feature, wndw, step, method, triangle = FALSE, CTR = centr, SCL = skale)
+Sb6m.cor <- cond2cormat(basepath, patts, feature, cormeth, triangle = FALSE)
 # Permutation testing
 obsVrand_corr <- replicate(REPS, sampmat_diag_stat(mean, Sb6m.cor$cormat))
 hist(obsVrand_corr, col='black', breaks=100, 
@@ -159,7 +160,7 @@ abline(v=Sb6m.cor$avg.cor, col='blue', lwd=2)
 # CONDITION S_eeg_6mins
 cond_str <- paste0(dyadcond[2], '_', physcond[2], '.*', timecond[3])
 patts <- c(paste0(paircond[1], '_', cond_str), paste0(paircond[2], '_', cond_str))
-Se6m.cor <- cond2rollcormat(basepath, patts, feature, wndw, step, method, triangle = FALSE, CTR = centr, SCL = skale)
+Se6m.cor <- cond2cormat(basepath, patts, feature, cormeth, triangle = FALSE)
 # Permutation testing
 obsVrand_corr <- replicate(REPS, sampmat_diag_stat(mean, Se6m.cor$cormat))
 hist(obsVrand_corr, col='black', breaks=100, 
@@ -170,7 +171,7 @@ abline(v=Se6m.cor$avg.cor, col='blue', lwd=2)
 # CONDITION S_resp_6mins
 cond_str <- paste0(dyadcond[2], '_', physcond[3], '.*', timecond[3])
 patts <- c(paste0(paircond[1], '_', cond_str), paste0(paircond[2], '_', cond_str))
-Sr6m.cor <- cond2rollcormat(basepath, patts, feature, wndw, step, method, triangle = FALSE, CTR = centr, SCL = skale)
+Sr6m.cor <- cond2cormat(basepath, patts, feature, cormeth, triangle = FALSE)
 # Permutation testing
 obsVrand_corr <- replicate(REPS, sampmat_diag_stat(mean, Sr6m.cor$cormat))
 hist(obsVrand_corr, col='black', breaks=100, 
@@ -181,7 +182,7 @@ abline(v=Sr6m.cor$avg.cor, col='blue', lwd=2)
 # CONDITION S_na_6mins
 cond_str <- paste0(dyadcond[2], '_', physcond[4], '.*', timecond[3])
 patts <- c(paste0(paircond[1], '_', cond_str), paste0(paircond[2], '_', cond_str))
-Sn6m.cor <- cond2rollcormat(basepath, patts, feature, wndw, step, method, triangle = FALSE, CTR = centr, SCL = skale)
+Sn6m.cor <- cond2cormat(basepath, patts, feature, cormeth, triangle = FALSE)
 # Permutation testing
 obsVrand_corr <- replicate(REPS, sampmat_diag_stat(mean, Sn6m.cor$cormat))
 hist(obsVrand_corr, col='black', breaks=100, 
@@ -190,25 +191,39 @@ abline(v=Sn6m.cor$avg.cor, col='blue', lwd=2)
 ```
 
 
+
 ## RELATION TO SELF-REPORTS
 
 Read Simo's csv file and create linear regression on S.na synchrony data
 
 ```{r selfrep}
-df <- read.csv('dynecom_Data.csv')
-srep.sbjix <- sort(unique(df$PairID))
-
-# DEALING WITH THE EDA RESULT CONDITION FIRST
-df.Sna.a <- df %>% filter(Scenario == 5 & AorB == 1)
-df.Sna.a$sync <- Sn6m.cor$corrs
-df.Sna.b <- df %>% filter(Scenario == 5 & AorB == 2)
-df.Sna.b$sync <- Sn6m.cor$corrs
-df.Sna <- rbind(df.Sna.a, df.Sna.b)
-
-df.Sna.mdl <- lm(sync ~ Batson_empathy + inter_arousal + inter_dominance + inter_valence + interCP + interPAI + interPAU + Relationship_legth_mean + Closeness_mean + Sex, data = df.Sna)
-summary(df.Sna.mdl)
+# df <- read.csv('dynecom_Data.csv')
+# srep.sbjix <- sort(unique(df$PairID))
+# 
+# # DEALING WITH THE D-EEG CONDITION RESULT FIRST
+# df.Deeg.a <- df %>% filter(Scenario == 2 & AorB == 1)
+# df.Deeg.a$sync <- De6m.cor$corrs
+# df.Deeg.b <- df %>% filter(Scenario == 2 & AorB == 2)
+# df.Deeg.b$sync <- De6m.cor$corrs
+# df.Deeg <- rbind(df.Deeg.a, df.Deeg.b)
+# 
+# df.Deeg.mdl <- lm(sync ~ Batson_empathy + inter_arousal + inter_dominance + inter_valence + interCP + interPAI + interPAU + Relationship_legth_mean + Closeness_mean + Sex, data = df.Deeg)
+# summary(df.Deeg.mdl)
+# 
+# 
+# # DEALING WITH THE D-RESP CONDITION RESULT
+# df.Drsp.a <- df %>% filter(Scenario == 2 & AorB == 1)
+# df.Drsp.a$sync <- De6m.cor$corrs
+# df.Drsp.b <- df %>% filter(Scenario == 2 & AorB == 2)
+# df.Drsp.b$sync <- De6m.cor$corrs
+# df.Drsp <- rbind(df.Drsp.a, df.Drsp.b)
+# 
+# df.Drsp.mdl <- lm(sync ~ Batson_empathy + inter_arousal + inter_dominance + inter_valence + interCP + interPAI + interPAU + Relationship_legth_mean + Closeness_mean + Sex, data = df.Drsp)
+# summary(df.Drsp.mdl)
 
 ```
+
+
 
 
 ## DIFFERENCE OF CONDITIONS
@@ -216,19 +231,19 @@ summary(df.Sna.mdl)
 Check the statistical significance of difference in synchrony between conditions. We do this by subtracting correlation vector of one condition from the other condition, then performing one-sample t-test and permutation test of difference from zero. We take the subtraction in the direction of our hypothesis of which is greater: for example, we expect synchrony to be higher in Dyad than Solo condition, so we test (Dyad - Solo).
 
 ```{r compareCond}
-DSboth <- Db6m.corr - Sb6m.cor
+DSboth <- Db6m.corr - Sb6m.cor$corrs
 t.test(DSboth)
 onet.permutation(DSboth)
 
-DSeeg <- De6m.corr - Se6m.cor
+DSeeg <- De6m.cor$corrs - Se6m.cor$corrs
 t.test(DSeeg)
 onet.permutation(DSeeg)
 
-DSresp <- Dr6m.corr - Sr6m.cor
+DSresp <- Dr6m.cor$corrs - Sr6m.cor$corrs
 t.test(DSresp)
 onet.permutation(DSresp)
 
-DSnone <- Dn6m.corr - Sn6m.cor
+DSnone <- Dn6m.cor$corrs - Sn6m.cor$corrs
 t.test(DSnone)
 onet.permutation(DSnone)
 ```
