@@ -11,7 +11,7 @@ T1toT2 <- times[6]
 # for (rgx in side_time) {
 rgx <- paste0(typstr, '.*', T1toT2)
 print(rgx)
-df <- read_all_recordings(paste0(basepath, '/ERA/'), rgx, 'txt')
+df <- read_all_recordings(paste0(basepath, '/ERA/'), rgx, 'txt', delim = "\t")
 df <- df %>% filter(Event.Name > 9) %>% filter(Event.Name < 90) 
 df$Event.Name <- factor(df$Event.Name)
 levels(df$Event.Name) <- c('ftnt', 'ftnl', 'ftwt', 'ftwl', 'stnt', 'stnl', 'stwt', 'stwl')
