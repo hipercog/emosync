@@ -1,4 +1,4 @@
-
+% TODO: make generic parameters!!
 % ROOTDIR = '/home/local/bcowley/Benslab/EMOSYNC/DYNECOM/EDAmat';
 ROOTDIR = './';
 FILT_STR = 'DCVR';
