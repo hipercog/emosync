@@ -1,4 +1,4 @@
-indir = '/home/ben/Benslab/PROJECT_LANGLIE/Batchalyze';
+indir = '/Users/niinapeltonen/Desktop/Autobio';
 filt = '';% {'S04' 'S11'};
 FIX = false;
 %starts & ends can also be a range, e.g. 0,1,2 -> 4,5,6

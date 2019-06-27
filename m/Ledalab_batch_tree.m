@@ -24,7 +24,7 @@ function Ledalab_batch_tree(indir, varargin)
 % 
 % (for all following parameters, see Leda docs for more detail)
 %   format      string, data format for Ledalab to read, default = 'biotracemat'
-%   smooth      cell, smoothing parameters, default
+%   smooth      cell, smoothing parameters, default = 'gauss', 20
 %   analyze     string, decomposition analysis algorithm, default = CDA
 %   optimize    int, Optimisation steps, default = 2
 %   era_beg     int vector, start times of ERA windows relative to events,
