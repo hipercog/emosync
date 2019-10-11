@@ -1,9 +1,33 @@
+function anslabEMG2csv(varargin)
 % convert Anslab EMG to table and write csv
-ind = '/Users/niinapeltonen/Desktop/EMG_processing/';
+%
+%       default, we choose to do 1 file only
+
+p = inputParser;
+p.addParameter('dir', '/Users/niinapeltonen/Desktop/EMG_processing/', @ischar)
+p.addParameter('start', 1, @isscalar)
+p.addParameter('end', 0, @isscalar)
+
+p.parse(varargin{:});
+Arg = p.Results;
+
+ind = Arg.dir;
 oud = ind;
-%fname = 'EMG00601.mat';
+
+
+%% Find files and parse them to csv
 fs = dir(fullfile(ind,'*.mat'));
-for i=1:numel(fs)
+if Arg.start > numel(fs)
+    error('anslabEMG2csv:bad_param', 'Pass ''start''<= number of EMG files ')
+end
+if Arg.end < Arg.start
+    Arg.end = Arg.start;
+end
+if Arg.end > numel(fs)
+    Arg.end = numel(fs);
+end
+
+for i = Arg.start:Arg.end
 
     emg = load(fullfile(ind, fs(i).name));
     emg = emg.emg;
@@ -27,7 +51,8 @@ for i=1:numel(fs)
     clear emg t ev zyg orb crg sampevs f
 end
 
-%% Specific to one file
+
+%% What we're doing, specific to one file
 % s6emg = load('EMG00601.mat');
 % s6emg = s6emg.emg;
 % t6 = [s6emg.event.time];

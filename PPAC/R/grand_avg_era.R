@@ -1,14 +1,15 @@
 library(tidyverse)
 library(R.matlab)
 
-basepath <- '~/Benslab/EMOSYNC/MethLounge/'
+basepath <- '~/Benslab/EMOSYNC/'
 setwd(basepath)
+datapath <- 'MethLounge_demoData/'
 
 # EDA
 times <- c('1to3', '3to5', '5to7', '7to9', '9to11')
 typstr <- '602_autobio_era'
 
-eda <- read_all_recordings(basepath, paste0(typstr, '.*', 'to'), 'txt', delim = "\t")
+eda <- read_all_recordings(datapath, paste0(typstr, '.*', 'to'), 'txt', delim = "\t")
 eda.viha <- eda %>% 
   filter(Event.Name == "VIHA") %>% 
   group_by(File) %>%
@@ -16,17 +17,32 @@ eda.viha <- eda %>%
   rename_if(is.numeric, ~paste0("avg_", .))
 
 # EMG
-s6emg <- read.csv('EMG00601.csv')
-idx = which(s6emg$sampevs == "VIHA", arr.ind=TRUE)
-emg <- s6emg[seq(idx[1], idx[1]+49), -1]
+s06emg <- read.csv(paste0(datapath, 'EMG00601.csv'))
+idx = which(s06emg$sampevs == "VIHA", arr.ind=TRUE)
+emg <- s06emg[seq(idx[1], idx[1]+49), -1]
+emg$emo <- "anger"
 emg$trial <- rep(1, nrow(emg))
 emg$sec <- c(rep(1, 10), rep(2, 10), rep(3, 10), rep(4, 10), rep(5, 10))
 for (i in 2:length(idx)){
-  tmp = s6emg[seq(idx[i], idx[i]+49), -1]
+  tmp = s06emg[seq(idx[i], idx[i]+49), -1]
+  tmp$emo <- "anger"
   tmp$trial = rep(i, nrow(tmp))
   tmp$sec <- c(rep(1, 10), rep(2, 10), rep(3, 10), rep(4, 10), rep(5, 10))
   emg <- rbind(emg, tmp)
 }
+idx = which(s06emg$sampevs == "SURU", arr.ind=TRUE)
+emg <- s06emg[seq(idx[1], idx[1]+49), -1]
+emg$emo <- "sadness"
+emg$trial <- rep(1, nrow(emg))
+emg$sec <- c(rep(1, 10), rep(2, 10), rep(3, 10), rep(4, 10), rep(5, 10))
+for (i in 2:length(idx)){
+  tmp = s06emg[seq(idx[i], idx[i]+49), -1]
+  tmp$emo <- "sadness"
+  tmp$trial = rep(i, nrow(tmp))
+  tmp$sec <- c(rep(1, 10), rep(2, 10), rep(3, 10), rep(4, 10), rep(5, 10))
+  emg <- rbind(emg, tmp)
+}
+
 emg.viha <- group_by(emg, sec) %>% 
   summarise_at(1:3, mean) %>%
   rename_at(2:4, ~paste0("avg_", .))
@@ -38,6 +54,7 @@ corrMatrix("SCR", eda.viha$avg_CDA.SCR,
            "fEMG.cor", emg.viha$avg_co6,
            "fEMG.orb", emg.viha$avg_or6,
            title = "SCR vs EMG")
+
 
 df <- cbind(eda.viha, emg.viha)
 df <- select(df, avg_CDA.SCR, avg_CDA.PhasicMax, avg_zy6, avg_co6, avg_or6)
@@ -62,10 +79,15 @@ reorder_cormat <- function(cormat){
   hc <- hclust(dd)
   cormat <-cormat[hc$order, hc$order]
 }
+get_upper_tri <- function(data2){
+  total <- data2
+  total[lower.tri(total)]<- NA
+  return(total)
+}
 
 # Reorder the correlation matrix
-cormat <- reorder_cormat(cormat)
 upper_tri <- get_upper_tri(cormat)
+cormat <- reorder_cormat(cormat)
 # Melt the correlation matrix
 melted_cormat <- melt(upper_tri, na.rm = TRUE)
 # Create a ggheatmap
