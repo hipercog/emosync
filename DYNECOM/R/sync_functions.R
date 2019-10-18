@@ -54,7 +54,7 @@ corr_rollme_1pr <- function(df, a, b, corvar, wnd, stp, method = "median", CTR =
 }
 
 
-# TODO - REPLACE PARAMS WITH ...
+# TODO - USE '...' PARAMS
 corr_rollme_allpr <- function(df, corvar, wnd, stp, method = "median", CTR = FALSE, SCL = FALSE)
 {
   sbjs <- unique(df$Part)
@@ -82,7 +82,7 @@ upper2lower <- function(m)
 }
 
 
-# TODO - REPLACE PARAMS WITH ...
+# TODO - USE '...' PARAMS
 corr_rollme_mat <- function(df, corvar, wnd, stp, method = "median", CTR = FALSE, SCL = FALSE, triangle = TRUE)
 {
   sbjs <- unique(df$Part)
@@ -157,7 +157,7 @@ intersect_read <- function(base, patts, SKP = 0)
 }
 
 
-# TODO - USE ... PARAMS
+# TODO - USE '...' PARAMS
 cond2rollcormat <- function(base, patts, feat, wndw, step, rollmeth = "median", triangle = FALSE, CTR = FALSE, SCL = FALSE) 
 {
   df <- intersect_read(base, patts, 1)
@@ -180,18 +180,4 @@ cond2cormat <- function(base, patts, feat, cormeth, triangle = FALSE)
   
   return(list("cormat" = cormat$corr, "corrs" = corrs, "avg.cor" = avg.cor, "subjs" = subjs))
   # return(list("cormat" = cormat$corr, "corrs" = corrs, "avg.cor" = avg.cor))
-}
-
-
-plot_rwb_cormat <- function(mtrx)
-{
-  ggplot(data = melt(mtrx), aes(x=Var1, y=Var2, fill=value)) + 
-    geom_tile(color = "white") +
-    scale_fill_gradient2(low = "blue", high = "red", mid = "white", 
-                         midpoint = 0, limit = c(-1,1), space = "Lab", 
-                         name="Pearson\nCorrelation") +
-    theme_minimal() + 
-    theme(axis.text.x = element_text(angle = 45, vjust = 1, size = 12, hjust = 1))+
-    coord_fixed()
-  # + xlab("") + ylab("")
 }

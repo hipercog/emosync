@@ -1,9 +1,8 @@
 library(tidyverse)
 library(R.matlab)
 
-basepath <- '~/Benslab/EMOSYNC/'
-setwd(basepath)
-datapath <- 'MethLounge_demoData/'
+source('R/znbnz_utils.R')
+datapath <- 'demoData/'
 
 # EDA
 times <- c('1to3', '3to5', '5to7', '7to9', '9to11')
@@ -47,7 +46,7 @@ emg.viha <- group_by(emg, sec) %>%
   summarise_at(1:3, mean) %>%
   rename_at(2:4, ~paste0("avg_", .))
 
-require(corrgram)
+
 corrMatrix("SCR", eda.viha$avg_CDA.SCR,
            "SCRmax", eda.viha$avg_CDA.PhasicMax, 
            "fEMG.zyg", emg.viha$avg_zy6,
@@ -71,19 +70,6 @@ ggplot(data = mlt_df, aes(x=Var1, y=Var2, fill=value)) +
   theme_minimal() + 
   theme(axis.text.x = element_text(angle = 45, vjust = 1, size = 12, hjust = 1))+
   coord_fixed()
-
-# reorder cormat by corr coef to identify patterns in the matrix. hclust for hierarchical clustering order
-reorder_cormat <- function(cormat){
-  # Use correlation between variables as distance
-  dd <- as.dist((1-cormat)/2)
-  hc <- hclust(dd)
-  cormat <-cormat[hc$order, hc$order]
-}
-get_upper_tri <- function(data2){
-  total <- data2
-  total[lower.tri(total)]<- NA
-  return(total)
-}
 
 # Reorder the correlation matrix
 upper_tri <- get_upper_tri(cormat)
@@ -117,3 +103,4 @@ ggheatmap +
     legend.direction = "horizontal")+
   guides(fill = guide_colorbar(barwidth = 7, barheight = 1,
                                title.position = "top", title.hjust = 0.5))
+

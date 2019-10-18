@@ -1,5 +1,5 @@
+# READ and PARSE EDA data
 library(readr)
-
 
 parse_recording <- function(fname, delim = ",", skip_lines = 0){
   fn <- parse_number(basename(fname))

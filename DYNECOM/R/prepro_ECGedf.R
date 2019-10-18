@@ -1,20 +1,20 @@
 library(lubridate)
 library(colibri)
 library(tidyverse)
-# source('read_parse_data.R')
 
-basepath <- "/home/bcowley/Benslab/EMOSYNC/DYNECOM/ECGedf/"
-setwd(basepath)
-
-file_list <- list.files(pattern = ".*6min.edf") #, full.names = TRUE)
+# Data is not stored in the emosync repository and is therefore two folders up, and then at the following path:
+basepath <- "../../DYNECOM"
+datapath <- paste0(basepath, "/ECGedf/")
+  
+file_list <- list.files(path = datapath, pattern = ".*6min.edf") #, full.names = TRUE)
 PLOT_RAW <- TRUE
 WNDW <- 60
 
 # logf <- "log_file.txt"
-plotdir <- "ECGplots/"
+plotdir <- paste0(basepath, "ECGplots/")
 if (!dir.exists(plotdir))
    dir.create(plotdir, FALSE)
-csvdir <- "HRVcsv/"
+csvdir <- paste0(basepath, "HRVcsv/")
 if (!dir.exists(csvdir))
   dir.create(csvdir, FALSE)
 
