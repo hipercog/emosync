@@ -1,0 +1,28 @@
+## Call:
+## lm(formula = sync ~ Batson_empathy + inter_arousal + inter_dominance + 
+##     inter_valence + interCP + interPAI + interPAU + Relationship_legth_mean + 
+##     Closeness_mean + Sex, data = df.Drsp)
+## 
+## Residuals:
+##      Min       1Q   Median       3Q      Max 
+## -0.49573 -0.14423 -0.00223  0.15436  0.43861 
+## 
+## Coefficients:
+##                          Estimate Std. Error t value Pr(>|t|)   
+## (Intercept)             -0.419796   0.729616  -0.575  0.56709   
+## Batson_empathy          -0.004619   0.027850  -0.166  0.86881   
+## inter_arousal           -0.037850   0.034203  -1.107  0.27266   
+## inter_dominance          0.042761   0.032715   1.307  0.19594   
+## inter_valence           -0.021395   0.054760  -0.391  0.69733   
+## interCP                 -0.013108   0.055444  -0.236  0.81388   
+## interPAI                 0.221085   0.068293   3.237  0.00193 **
+## interPAU                -0.084298   0.051139  -1.648  0.10425   
+## Relationship_legth_mean -0.011726   0.005640  -2.079  0.04170 * 
+## Closeness_mean           0.023501   0.023362   1.006  0.31828   
+## Sex                     -0.110254   0.063733  -1.730  0.08854 . 
+## ---
+## Signif. codes:  0 '***' 0.001 '**' 0.01 '*' 0.05 '.' 0.1 ' ' 1
+## 
+## Residual standard error: 0.2471 on 63 degrees of freedom
+## Multiple R-squared:  0.2664, Adjusted R-squared:   0.15 
+## F-statistic: 2.288 on 10 and 63 DF,  p-value: 0.02323

@@ -96,9 +96,9 @@ To obtain a permutation test statistic, we repeat the random sampling 10000 time
 
 ```{r permutation}
 # CONDITION D_both_6mins
-obsVrand_corr <- replicate(REPS, sampmat_diag_stat(mean, Db6m.cormat$corr))
-hist(obsVrand_corr, col='black', breaks=100, 
-     main = paste(cond_str, ", two-tailed p =", sum(abs(obsVrand_corr) > abs(Db6m.avg.cor)) / REPS))
+Db.obsVrand_corr <- replicate(REPS, sampmat_diag_stat(mean, Db6m.cormat$corr))
+hist(Db.obsVrand_corr, col='black', breaks=100, 
+     main = paste(cond_str, ", two-tailed p =", sum(abs(Db.obsVrand_corr) > abs(Db6m.avg.cor)) / REPS))
 abline(v=Db6m.avg.cor, col='blue', lwd=2)
 ```
 
@@ -112,9 +112,9 @@ cond_str <- paste0(dyadcond[1], '_', physcond[2], '.*', timecond[3])
 patts <- c(paste0(paircond[1], '_', cond_str), paste0(paircond[2], '_', cond_str))
 De6m.cor <- cond2cormat(basepath, patts, feature, cormeth, triangle = FALSE)
 # Permutation testing
-obsVrand_corr <- replicate(REPS, sampmat_diag_stat(mean, De6m.cor$cormat))
-hist(obsVrand_corr, col='black', breaks=100, 
-     main = paste(cond_str, ", two-tailed p =", sum(abs(obsVrand_corr) > abs(De6m.cor$avg.cor)) / REPS))
+De.obsVrand_corr <- replicate(REPS, sampmat_diag_stat(mean, De6m.cor$cormat))
+hist(De.obsVrand_corr, col='black', breaks=100, 
+     main = paste(cond_str, ", two-tailed p =", sum(abs(De.obsVrand_corr) > abs(De6m.cor$avg.cor)) / REPS))
 abline(v=De6m.cor$avg.cor, col='blue', lwd=2)
 
 
@@ -124,9 +124,9 @@ cond_str <- paste0(dyadcond[1], '_', physcond[3], '.*', timecond[3])
 patts <- c(paste0(paircond[1], '_', cond_str), paste0(paircond[2], '_', cond_str))
 Dr6m.cor <- cond2cormat(basepath, patts, feature, cormeth, triangle = FALSE)
 # Permutation testing
-obsVrand_corr <- replicate(REPS, sampmat_diag_stat(mean, Dr6m.cor$cormat))
-hist(obsVrand_corr, col='black', breaks=100, 
-     main = paste(cond_str, ", two-tailed p =", sum(abs(obsVrand_corr) > abs(Dr6m.cor$avg.cor)) / REPS))
+Dr.obsVrand_corr <- replicate(REPS, sampmat_diag_stat(mean, Dr6m.cor$cormat))
+hist(Dr.obsVrand_corr, col='black', breaks=100, 
+     main = paste(cond_str, ", two-tailed p =", sum(abs(Dr.obsVrand_corr) > abs(Dr6m.cor$avg.cor)) / REPS))
 abline(v=Dr6m.cor$avg.cor, col='blue', lwd=2)
 
 
@@ -136,9 +136,9 @@ cond_str <- paste0(dyadcond[1], '_', physcond[4], '.*', timecond[3])
 patts <- c(paste0(paircond[1], '_', cond_str), paste0(paircond[2], '_', cond_str))
 Dn6m.cor <- cond2cormat(basepath, patts, feature, cormeth, triangle = FALSE)
 # Permutation testing
-obsVrand_corr <- replicate(REPS, sampmat_diag_stat(mean, Dn6m.cor$cormat))
-hist(obsVrand_corr, col='black', breaks=100, 
-     main = paste(cond_str, ", two-tailed p =", sum(abs(obsVrand_corr) > abs(Dn6m.cor$avg.cor)) / REPS))
+Dn.obsVrand_corr <- replicate(REPS, sampmat_diag_stat(mean, Dn6m.cor$cormat))
+hist(Dn.obsVrand_corr, col='black', breaks=100, 
+     main = paste(cond_str, ", two-tailed p =", sum(abs(Dn.obsVrand_corr) > abs(Dn6m.cor$avg.cor)) / REPS))
 abline(v=Dn6m.cor$avg.cor, col='blue', lwd=2)
 ```
 
@@ -151,9 +151,9 @@ cond_str <- paste0(dyadcond[2], '_', physcond[1], '.*', timecond[3])
 patts <- c(paste0(paircond[1], '_', cond_str), paste0(paircond[2], '_', cond_str))
 Sb6m.cor <- cond2cormat(basepath, patts, feature, cormeth, triangle = FALSE)
 # Permutation testing
-obsVrand_corr <- replicate(REPS, sampmat_diag_stat(mean, Sb6m.cor$cormat))
-hist(obsVrand_corr, col='black', breaks=100, 
-     main = paste(cond_str, ", two-tailed p =", sum(abs(obsVrand_corr) > abs(Sb6m.cor$avg.cor)) / REPS))
+Sb.obsVrand_corr <- replicate(REPS, sampmat_diag_stat(mean, Sb6m.cor$cormat))
+hist(Sb.obsVrand_corr, col='black', breaks=100, 
+     main = paste(cond_str, ", two-tailed p =", sum(abs(Sb.obsVrand_corr) > abs(Sb6m.cor$avg.cor)) / REPS))
 abline(v=Sb6m.cor$avg.cor, col='blue', lwd=2)
 
 
@@ -162,9 +162,9 @@ cond_str <- paste0(dyadcond[2], '_', physcond[2], '.*', timecond[3])
 patts <- c(paste0(paircond[1], '_', cond_str), paste0(paircond[2], '_', cond_str))
 Se6m.cor <- cond2cormat(basepath, patts, feature, cormeth, triangle = FALSE)
 # Permutation testing
-obsVrand_corr <- replicate(REPS, sampmat_diag_stat(mean, Se6m.cor$cormat))
-hist(obsVrand_corr, col='black', breaks=100, 
-     main = paste(cond_str, ", two-tailed p =", sum(abs(obsVrand_corr) > abs(Se6m.cor$avg.cor)) / REPS))
+Se.obsVrand_corr <- replicate(REPS, sampmat_diag_stat(mean, Se6m.cor$cormat))
+hist(Se.obsVrand_corr, col='black', breaks=100, 
+     main = paste(cond_str, ", two-tailed p =", sum(abs(Se.obsVrand_corr) > abs(Se6m.cor$avg.cor)) / REPS))
 abline(v=Se6m.cor$avg.cor, col='blue', lwd=2)
 
 
@@ -173,9 +173,9 @@ cond_str <- paste0(dyadcond[2], '_', physcond[3], '.*', timecond[3])
 patts <- c(paste0(paircond[1], '_', cond_str), paste0(paircond[2], '_', cond_str))
 Sr6m.cor <- cond2cormat(basepath, patts, feature, cormeth, triangle = FALSE)
 # Permutation testing
-obsVrand_corr <- replicate(REPS, sampmat_diag_stat(mean, Sr6m.cor$cormat))
-hist(obsVrand_corr, col='black', breaks=100, 
-     main = paste(cond_str, ", two-tailed p =", sum(abs(obsVrand_corr) > abs(Sr6m.cor$avg.cor)) / REPS))
+Sr.obsVrand_corr <- replicate(REPS, sampmat_diag_stat(mean, Sr6m.cor$cormat))
+hist(Sr.obsVrand_corr, col='black', breaks=100, 
+     main = paste(cond_str, ", two-tailed p =", sum(abs(Sr.obsVrand_corr) > abs(Sr6m.cor$avg.cor)) / REPS))
 abline(v=Sr6m.cor$avg.cor, col='blue', lwd=2)
 
 
@@ -184,42 +184,98 @@ cond_str <- paste0(dyadcond[2], '_', physcond[4], '.*', timecond[3])
 patts <- c(paste0(paircond[1], '_', cond_str), paste0(paircond[2], '_', cond_str))
 Sn6m.cor <- cond2cormat(basepath, patts, feature, cormeth, triangle = FALSE)
 # Permutation testing
-obsVrand_corr <- replicate(REPS, sampmat_diag_stat(mean, Sn6m.cor$cormat))
-hist(obsVrand_corr, col='black', breaks=100, 
-     main = paste(cond_str, ", two-tailed p =", sum(abs(obsVrand_corr) > abs(Sn6m.cor$avg.cor)) / REPS))
+Sn.obsVrand_corr <- replicate(REPS, sampmat_diag_stat(mean, Sn6m.cor$cormat))
+hist(Sn.obsVrand_corr, col='black', breaks=100, 
+     main = paste(cond_str, ", two-tailed p =", sum(abs(Sn.obsVrand_corr) > abs(Sn6m.cor$avg.cor)) / REPS))
 abline(v=Sn6m.cor$avg.cor, col='blue', lwd=2)
+```
+
+
+
+```{r plotSync}
+library(gghalves)
+df.sync <- data.frame("D_na" = Dn6m.cor$avg.cor, "D_eeg" = De6m.cor$avg.cor, 
+                      "D_resp" = Dr6m.cor$avg.cor, "D_both" = Db6m.avg.cor, 
+                      "S_na" = Sn6m.cor$avg.cor, "S_eeg" = Se6m.cor$avg.cor, 
+                      "S_resp" = Sr6m.cor$avg.cor, "S_both" = Sb6m.cor$avg.cor) %>% 
+        gather(key = "Condition", value = "synchrony")
+df.perm <- data.frame("D_na" = Dn.obsVrand_corr, "D_eeg" = De.obsVrand_corr, 
+                      "D_resp" = Dr.obsVrand_corr, "D_both" = Db.obsVrand_corr, 
+                      "S_na" = Sn.obsVrand_corr, "S_eeg" = Se.obsVrand_corr, 
+                      "S_resp" = Sr.obsVrand_corr, "S_both" = Sb.obsVrand_corr) %>% 
+        gather(key = "Condition", value = "synchrony") %>%
+        mutate(Condition=factor(Condition, levels=rev(df.sync$Condition)))
+
+# Basic violin plot
+ggplot(df.perm, aes(x=Condition, y=synchrony)) + 
+        geom_half_violin(trim=FALSE, fill="gray", side = "r") +
+        geom_boxplot(width=0.1, outlier.shape = NA) +
+        geom_crossbar(aes(ymin = synchrony, ymax = synchrony), df.sync, color = "red") +
+        coord_flip() +
+  labs(title="Permutation test of HRV synchrony per condition", x="Condition", y = "Synchrony (correlation)") +
+  theme_classic()
 ```
 
 
 
 ## RELATION TO SELF-REPORTS
 
-Read Simo's csv file and create linear regression on S.na synchrony data
+Read Simo's csv file and create linear regression on Deeg and Dresp synchrony data
 
 ```{r selfrep}
-# df <- read.csv('dynecom_Data.csv')
-# srep.sbjix <- sort(unique(df$PairID))
-# 
-# # DEALING WITH THE D-EEG CONDITION RESULT FIRST
-# df.Deeg.a <- df %>% filter(Scenario == 2 & AorB == 1)
-# df.Deeg.a$sync <- De6m.cor$corrs
-# df.Deeg.b <- df %>% filter(Scenario == 2 & AorB == 2)
-# df.Deeg.b$sync <- De6m.cor$corrs
-# df.Deeg <- rbind(df.Deeg.a, df.Deeg.b)
-# 
-# df.Deeg.mdl <- lm(sync ~ Batson_empathy + inter_arousal + inter_dominance + inter_valence + interCP + interPAI + interPAU + Relationship_legth_mean + Closeness_mean + Sex, data = df.Deeg)
-# summary(df.Deeg.mdl)
-# 
-# 
-# # DEALING WITH THE D-RESP CONDITION RESULT
-# df.Drsp.a <- df %>% filter(Scenario == 2 & AorB == 1)
-# df.Drsp.a$sync <- De6m.cor$corrs
-# df.Drsp.b <- df %>% filter(Scenario == 2 & AorB == 2)
-# df.Drsp.b$sync <- De6m.cor$corrs
-# df.Drsp <- rbind(df.Drsp.a, df.Drsp.b)
-# 
-# df.Drsp.mdl <- lm(sync ~ Batson_empathy + inter_arousal + inter_dominance + inter_valence + interCP + interPAI + interPAU + Relationship_legth_mean + Closeness_mean + Sex, data = df.Drsp)
-# summary(df.Drsp.mdl)
+df <- read.csv('dynecom_Data.csv')
+shareID <- intersect( intersect(df %>% filter(AorB == 1) %>% select(PairID) %>% unlist(), 
+                                df %>% filter(AorB == 2) %>% select(PairID) %>% unlist()),
+                      De6m.cor$subjs)
+
+# DEALING WITH THE D-EEG CONDITION RESULT FIRST
+sharePairID <- intersect( intersect(
+        df %>% filter(Scenario == 2 & AorB == 1) %>% select(PairID) %>% unlist(), 
+        df %>% filter(Scenario == 2 & AorB == 2) %>% select(PairID) %>% unlist()),
+        De6m.cor$subjs)
+df.Deeg.a <- df %>% filter(Scenario == 2 & AorB == 1 & PairID %in% sharePairID)
+df.Deeg.a$sync <- De6m.cor$corrs[De6m.cor$subjs %in% sharePairID]
+df.Deeg.b <- df %>% filter(Scenario == 2 & AorB == 2 & PairID %in% sharePairID)
+df.Deeg.b$sync <- De6m.cor$corrs[De6m.cor$subjs %in% sharePairID]
+df.Deeg <- rbind(df.Deeg.a, df.Deeg.b)
+
+df.Deeg.mdl <- lm(sync ~ Batson_empathy + 
+                         inter_arousal + inter_dominance + inter_valence + interCP + interPAI + interPAU +
+                         SAM_Arousal_self + SAM_Valence_self + SAM_Dominance_self + 
+                         Co_Presence_self + 
+                         Perceived_Affective_Interdependence_self + Perceived_Affective_Understanding_self +
+                         Relationship_legth_mean + Closeness_mean + Sex, data = df.Deeg)
+summary(df.Deeg.mdl)
+
+
+# DEALING WITH THE D-RESP CONDITION RESULT
+sharePairID <- intersect( intersect(
+        df %>% filter(Scenario == 3 & AorB == 1) %>% select(PairID) %>% unlist(), 
+        df %>% filter(Scenario == 3 & AorB == 2) %>% select(PairID) %>% unlist()), 
+        Dr6m.cor$subjs)
+df.Drsp.a <- df %>% filter(Scenario == 3 & AorB == 1 & PairID %in% sharePairID)
+df.Drsp.a$sync <- Dr6m.cor$corrs[Dr6m.cor$subjs %in% sharePairID]
+df.Drsp.b <- df %>% filter(Scenario == 3 & AorB == 2 & PairID %in% sharePairID)
+df.Drsp.b$sync <- Dr6m.cor$corrs[Dr6m.cor$subjs %in% sharePairID]
+df.Drsp <- rbind(df.Drsp.a, df.Drsp.b)
+
+df.Drsp.mdl <- lm(sync ~ Batson_empathy + 
+                         inter_arousal + inter_dominance + inter_valence + interCP + interPAI + interPAU +
+                         SAM_Arousal_self + SAM_Valence_self + SAM_Dominance_self + 
+                         Co_Presence_self + 
+                         Perceived_Affective_Interdependence_self + Perceived_Affective_Understanding_self +
+                         Relationship_legth_mean + Closeness_mean + Sex, data = df.Drsp)
+summary(df.Drsp.mdl)
+
+with(df.Drsp, plot(jitter(sync, 2), jitter(interPAI, 2)))
+with(df.Drsp, plot(jitter(sync, 2), jitter(Relationship_legth_mean, 2)))
+# Sex violin plot
+ggplot(df.Drsp, aes(x=as.factor(Sex), y=sync)) + 
+        geom_half_violin(trim=FALSE, fill="gray", side = "r") +
+        geom_boxplot(width=0.1, outlier.shape = NA) +
+        labs(title="HRV synchrony per gender", x="Gender", y = "Synchrony (correlation)") +
+        coord_flip() +
+        theme_classic()
 
 ```
 
@@ -231,19 +287,20 @@ Read Simo's csv file and create linear regression on S.na synchrony data
 Check the statistical significance of difference in synchrony between conditions. We do this by subtracting correlation vector of one condition from the other condition, then performing one-sample t-test and permutation test of difference from zero. We take the subtraction in the direction of our hypothesis of which is greater: for example, we expect synchrony to be higher in Dyad than Solo condition, so we test (Dyad - Solo).
 
 ```{r compareCond}
-DSboth <- Db6m.corr - Sb6m.cor$corrs
-t.test(DSboth)
-onet.permutation(DSboth)
-
-DSeeg <- De6m.cor$corrs - Se6m.cor$corrs
+# DSboth <- Db6m.corr - Sb6m.cor$corrs
+# t.test(DSboth)
+# onet.permutation(DSboth)
+shareID <- intersect(De6m.cor$subjs, Se6m.cor$subjs)
+DSeeg <- De6m.cor$corrs[De6m.cor$subjs %in% shareID] - Se6m.cor$corrs[Se6m.cor$subjs %in% shareID]
 t.test(DSeeg)
 onet.permutation(DSeeg)
 
-DSresp <- Dr6m.cor$corrs - Sr6m.cor$corrs
+shareID <- intersect(Dr6m.cor$subjs, Sr6m.cor$subjs)
+DSresp <- Dr6m.cor$corrs[Dr6m.cor$subjs %in% shareID] - Sr6m.cor$corrs[Sr6m.cor$subjs %in% shareID]
 t.test(DSresp)
 onet.permutation(DSresp)
 
-DSnone <- Dn6m.cor$corrs - Sn6m.cor$corrs
-t.test(DSnone)
-onet.permutation(DSnone)
+# DSnone <- Dn6m.cor$corrs - Sn6m.cor$corrs
+# t.test(DSnone)
+# onet.permutation(DSnone)
 ```

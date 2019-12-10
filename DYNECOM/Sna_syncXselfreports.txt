@@ -1,0 +1,28 @@
+Call:
+lm(formula = sync ~ Batson_empathy + inter_arousal + inter_dominance + 
+    inter_valence + interCP + interPAI + interPAU + Relationship_legth_mean + 
+    Closeness_mean + Sex, data = df.Sna)
+
+Residuals:
+     Min       1Q   Median       3Q      Max 
+-0.45192 -0.10228 -0.02965  0.09196  0.52808 
+
+Coefficients:
+                         Estimate Std. Error t value Pr(>|t|)    
+(Intercept)              0.237732   0.516266   0.460  0.64666    
+Batson_empathy           0.012641   0.018926   0.668  0.50651    
+inter_arousal            0.014191   0.024668   0.575  0.56702    
+inter_dominance         -0.019335   0.022331  -0.866  0.38968    
+inter_valence            0.025134   0.029849   0.842  0.40275    
+interCP                  0.005507   0.036734   0.150  0.88129    
+interPAI                -0.067412   0.055991  -1.204  0.23283    
+interPAU                 0.003834   0.038689   0.099  0.92137    
+Relationship_legth_mean  0.017211   0.004077   4.222 7.47e-05 ***
+Closeness_mean          -0.041961   0.017026  -2.464  0.01629 *  
+Sex                      0.138256   0.045550   3.035  0.00342 ** 
+---
+Signif. codes:  0 ‘***’ 0.001 ‘**’ 0.01 ‘*’ 0.05 ‘.’ 0.1 ‘ ’ 1
+
+Residual standard error: 0.1903 on 67 degrees of freedom
+Multiple R-squared:  0.3767,	Adjusted R-squared:  0.2837 
+F-statistic:  4.05 on 10 and 67 DF,  p-value: 0.0002272
