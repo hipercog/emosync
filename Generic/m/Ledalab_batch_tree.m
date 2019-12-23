@@ -1,8 +1,8 @@
-function Ledalab_batch_tree(indir, downsamp, varargin)
+function Ledalab_batch_tree(indir, varargin)
 % Ledalab_batch_tree applies Ledalab batch processing to files across a tree
 % 
 % Syntax:
-%       Ledalab_batch_tree(wdir, downsamp, 'key', [value], ...)
+%       Ledalab_batch_tree(indir, 'key', [value], ...)
 %
 % Description: finds all EDA *.mat files from an experiment (that is, any
 %              file matching string 'filefilt' in any folder below 'indir')
@@ -13,21 +13,21 @@ function Ledalab_batch_tree(indir, downsamp, varargin)
 % Input:
 %   indir       string, root folder: all target files here or in any subfolder
 %                       (recursive) are returned for processing
-%   downsamp    int, factor to downsample by, required as input due to
-%                    difficulty of knowing sample rate a priori
 % 
 % Varargin:
+%   downsamp    int, factor to downsample by, default = 1 (no downsample)
 %   filt        string, part of filename to match subset of files for, e.g. 
 %                       different conditions, default = ''
 %   ext         string, extension of the required files, default = 'mat'
 %   DA          boolean, perform decomposition analysis?, default = true
+%   parfor      boolean, perform DA in a parallel for loop?, default = false
 %   exp_era     boolean, perform ERA export?, default = true
 %   exp_scrlist boolean, perform SCR-list export?, default = true
 % 
 % (for all following parameters, see Leda docs for more detail)
-%   format      string, data format for Ledalab to read, default = 'biotracemat'
+%   format      string, data format for Ledalab to read, default = 'leda'
 %                       FOR 'format' OPTOINS SEE LEDALAB'S import_data.m
-%   filter      [1 2] vector, order and low-pass cutoff, default = [10 12]
+%   filter      [1 2], filter order & low-pass cutoff, default = 0 (no filter)
 %   smooth      cell, smoothing parameters, default = {'gauss' 20}
 %   analyze     string, decomposition analysis algorithm, default = 'CDA'
 %   optimize    int, Optimisation steps, default = 2
@@ -44,17 +44,19 @@ function Ledalab_batch_tree(indir, downsamp, varargin)
 p = inputParser;
 
 p.addRequired('indir', @ischar)
-p.addRequired('downsamp', @isscalar)
 
+p.addParameter('downsamp', 1, @isscalar)
 p.addParameter('filt', '', @ischar)
 p.addParameter('ext', 'mat', @ischar)
 
 p.addParameter('DA', true, @islogical) %perform decomposition analysis?
+p.addParameter('parfor', false, @islogical)
+
 p.addParameter('exp_era', true, @islogical)
 p.addParameter('exp_scrlist', true, @islogical)
 
-p.addParameter('format', 'biotracemat', @ischar)
-p.addParameter('filter', [10 12], @isnumeric)
+p.addParameter('format', 'leda', @ischar)
+p.addParameter('filter', 0, @isnumeric)
 p.addParameter('smooth', {'gauss', 20}, @iscell)
 p.addParameter('analyze', 'CDA', @ischar)
 p.addParameter('optimize', 2, @isscalar)
@@ -66,7 +68,7 @@ p.addParameter('scr_thr', 0.01, @isnumeric)
 p.addParameter('sav_typ', 2, @isnumeric)
 
 
-p.parse(indir, downsamp, varargin{:})
+p.parse(indir, varargin{:})
 Arg = p.Results;
 
 scrlist_thr = Arg.scr_thr;
@@ -81,30 +83,31 @@ fcell(strcmp({files.name}, 'batchmode_protocol.mat')) = [];
 
 % Open raw mats and decompose with CDA or DDA
 if Arg.DA
-if numel(fcell) > 32
-    fm = Arg.format;
-    filt = Arg.filter;
-    sm = Arg.smooth;
-    az = Arg.analyze;
-    oz = Arg.optimize;
-    parfor (ix = 1:numel(fcell))
-        Ledalab(fcell{ix}...
-            , 'open', fm...
-            , 'filter', filt...
-            , 'downsample', downsamp...
-            , 'smooth', sm...
-            , 'analyze', az...
-            , 'optimize', oz)
+    if Arg.parfor
+        fm = Arg.format;
+        filt = Arg.filter;
+        ds = Arg.downsamp;
+        sm = Arg.smooth;
+        az = Arg.analyze;
+        oz = Arg.optimize;
+        parfor (ix = 1:numel(fcell))
+            Ledalab(fcell{ix}...
+                , 'open', fm...
+                , 'filter', filt...
+                , 'downsample', ds...
+                , 'smooth', sm...
+                , 'analyze', az...
+                , 'optimize', oz)
+        end
+    else
+        Ledalab(fcell...
+            , 'open', Arg.format...
+            , 'filter', Arg.filter...
+            , 'downsample', Arg.downsamp...
+            , 'smooth', Arg.smooth...
+            , 'analyze',Arg.analyze...
+            , 'optimize', Arg.optimize)
     end
-else
-    Ledalab(fcell...
-        , 'open', Arg.format...
-        , 'filter', Arg.filter...
-        , 'downsample', downsamp...
-        , 'smooth', Arg.smooth...
-        , 'analyze',Arg.analyze...
-        , 'optimize', Arg.optimize)
-end
 end
 
 
