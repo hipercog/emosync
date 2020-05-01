@@ -13,6 +13,7 @@ library(reshape2)
 library(RcppRoll)
 library(DAAG)
 library(cocor)
+library(gghalves)
 source('sync_functions.R')
 source('znbnz_utils.R')
 ```
@@ -192,7 +193,6 @@ abline(v=Sn6m.cor$avg.cor, col='blue', lwd=2)
 
 
 ```{r plotSync}
-library(gghalves)
 df.sync <- data.frame("D_na" = Dn6m.cor$avg.cor, "D_eeg" = De6m.cor$avg.cor, 
                       "D_resp" = Dr6m.cor$avg.cor, "D_both" = Db6m.avg.cor, 
                       "S_na" = Sn6m.cor$avg.cor, "S_eeg" = Se6m.cor$avg.cor, 
