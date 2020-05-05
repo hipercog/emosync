@@ -35,7 +35,7 @@ data_ext = '*.set';
 ctapID = 'ctap-ppac';
 
 % use sbj_filt to select all (or a subset) of available recordings
-sbj_filt = 'all'; %setdiff(1:12, [3 7]);
+sbj_filt = 6; %setdiff(1:12, [3 7]);
 % use keyword 'all' to select all stepSets, or use some index
 set_select = 5;
 % set the electrode for which to calculate and plot ERPs after preprocessing
