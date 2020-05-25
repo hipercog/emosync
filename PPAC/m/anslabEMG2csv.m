@@ -13,6 +13,11 @@ Arg = p.Results;
 
 ind = Arg.dir;
 oud = ind;
+LOCK_EVTS =...
+    {'EMPATIA' 'ILO' 'INHO' 'INNOSTUNEISUUS' 'PELKO'...
+    'RENTOUTUNEISUUS' 'SURU' 'VIHA' 'VOITTO'...
+    'EMPATHY' 'JOY' 'DISGUST' 'ENTHUSIASM' 'FEAR'...
+    'RELAXATION' 'DEPRESSION' 'ANGER' 'TRIUMPH'};
 
 
 %% Find files and parse them to csv
@@ -29,6 +34,7 @@ end
 
 for i = Arg.start:Arg.end
 
+    [~, f, ~] = fileparts(fs(i).name);
     emg = load(fullfile(ind, fs(i).name));
     emg = emg.emg;
     t = [emg.event.time];
@@ -38,29 +44,29 @@ for i = Arg.start:Arg.end
     crg = emg.cor';
     sampevs = cell(numel(zyg), 1);
     for tix = 1:numel(t)
+        if ismember(ev{tix}, LOCK_EVTS) &&...% event t is emotion prompt
+                tix < numel(t) - 1 &&...% the vectors have enough space... 
+                    t(tix + 1) * 10 < numel(zyg) - (5 * emg.sr) &&...% & time
+                        ~isempty(str2double(ev{tix + 1})) % event t+1 is number
+            rspix = tix + 1;
+            dupix = t(tix + 2:end) == t(tix + 1);
+            if any(dupix)
+                rspix = [rspix tix + find(dupix) + 1]; %#ok<AGROW>
+            end
+            [ev{rspix}] =...
+                deal([LOCK_EVTS{ismember(LOCK_EVTS, ev{tix})} '_rsp']);
+        end
         sampevs{max(1, round(t(tix) * emg.sr))} = ev{tix}; 
     end
-    [~, f, ~] = fileparts(fs(i).name);
-    if numel(sampevs) == numel(zyg)
-        T = table(sampevs, zyg, orb, crg);
-        writetable(T, fullfile(oud, [f '.csv']));
-        clear T
-    else
+    
+    if numel(sampevs) > numel(zyg)
+        sampevs = sampevs(1:numel(zyg));
+    elseif numel(sampevs) < numel(zyg)
         warning('Something has gone terribly wrong! %s', f)
+        continue
     end
-    clear emg t ev zyg orb crg sampevs f
+    
+    T = table(sampevs, zyg, orb, crg);
+    writetable(T, fullfile(oud, [f '.csv']));
+    clear emg t ev zyg orb crg sampevs f T
 end
-
-
-%% What we're doing, specific to one file
-% s6emg = load('EMG00601.mat');
-% s6emg = s6emg.emg;
-% t6 = [s6emg.event.time];
-% ev6 = {s6emg.event.name};
-% zy6 = s6emg.zyg';
-% or6 = s6emg.orb';
-% co6 = s6emg.cor';
-% sampevs = cell(numel(zy6), 1);
-% for tix = 1:numel(t6), sampevs{round(t6(tix) * s6emg.sr)} = ev6{tix}; end
-% s6T = table(sampevs, zy6, or6, co6);
-% writetable(s6T, 'EMG00601.mat')

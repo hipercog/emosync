@@ -1,3 +1,4 @@
+% THIS SCRIPT HAS BEEN ADDED TO CTAP AS /src/utils/events/eeg_tile_locked_evts.m
 
 ind = '/home/bcowley/Benslab/project_METHODMAN/project_PPAC/PPAC/ctap-ppac/4_cleaned';
 fileslist = dir(fullfile(ind, '*.set'));

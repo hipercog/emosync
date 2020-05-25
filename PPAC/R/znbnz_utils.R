@@ -58,3 +58,10 @@ read_all_recordings <- function(basepath, pat="", ext="", delim = ",", skip = 0)
   }
   out
 }
+
+diagnose_vars <- function(x){
+  napc <- sum(is.na(x)) / length(x)
+  zrpc <- sum(x[!is.na(x)] == 0) / length(x)
+  
+  return(paste("NAs: ", napc, " & zeros: ", zrpc))
+}
