@@ -12,7 +12,7 @@ source(file.path(here(), 'R', 'cossim_sync_method_functions.R'))
 polku <- file.path(here(), 'data', 'ppac_all.csv')
 tiedosto <- read.csv(polku, header = T, sep = ",")
 
-sync_2feats_1emo(tiedosto, "anger", orb_avg, fasym_rel, TIMECOR = FALSE)
+sync_2feats_1emo(tiedosto, "anger", orb_avg, fasym_rel, TIMECOR = F)
 
 ###
 fnames <- colnames(select(tiedosto, 5:17))
@@ -26,7 +26,7 @@ for (e in emotions){
   for (i in 2:flen - 1) {
     for (j in (i+1) : flen) {
       tmp <- sync_2feats_1emo(tiedosto, e, fnames[i], fnames[j], FALSE)
-      allsync <- merge(allsync, tmp)
+      allsync <- merge(allsync, tmp, sort = F)
     }
   }
   emosync <- rbind(emosync, allsync)
@@ -35,5 +35,5 @@ for (e in emotions){
 }
 
 emosyncL <- emosync %>%
-  pivot_longer(cols = starts_with("cos_sim."), names_to = "feat.pair", values_to = "cos_sim") %>%
-  mutate(feat.pair = gsub("cos_sim.", "", feat.pair))
+  pivot_longer(cols = starts_with("cos.sim_"), names_to = "feat.pair", values_to = "cos.sim") %>%
+  mutate(feat.pair = gsub("cos.sim_", "", feat.pair))
