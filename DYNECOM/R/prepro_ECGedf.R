@@ -5,7 +5,7 @@ library(tidyverse)
 # Data is not stored in the emosync repository and is therefore two folders up, and then at the following path:
 basepath <- "../../DYNECOM"
 datapath <- paste0(basepath, "/ECGedf/")
-  
+
 file_list <- list.files(path = datapath, pattern = ".*6min.edf") #, full.names = TRUE)
 PLOT_RAW <- TRUE
 WNDW <- 60
