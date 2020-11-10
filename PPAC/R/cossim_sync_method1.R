@@ -44,24 +44,24 @@ emosyncL <- emosync %>%
 #   mutate(idx = 1:n()) %>%
 #   arrange(cos.sim, .by_group = TRUE)
 
-testi <- emosyncL %>% 
+mean.cos.sim <- emosyncL %>% 
   group_by(ID, emotion) %>% 
   summarise(sync = mean(abs(na.omit(cos.sim))))
 
-test2 <- emosyncL %>% 
+mean.emo <- emosyncL %>% 
   group_by(emotion) %>% 
   summarise(sync = mean(na.omit(cos.sim)))
 
-test3 <- emosyncL %>% 
+mean.feat.pair <- emosyncL %>% 
   group_by(feat.pair) %>% 
   summarise(sync = mean(na.omit(cos.sim)))
 
-test4 <- emosyncL %>% 
+mean.emo.zyg.orb <- emosyncL %>% 
   filter(feat.pair == "zyg_avg_orb_avg") %>%
   group_by(emotion) %>%
   summarise(zyg.orb.sync = mean(na.omit(cos.sim)))
 
-test5 <- emosyncL %>% 
+mean.id.zyg.orb <- emosyncL %>% 
   filter(feat.pair == "zyg_avg_orb_avg") %>%
   group_by(ID) %>%
   summarise(zyg.orb.sync = mean(na.omit(cos.sim)))
