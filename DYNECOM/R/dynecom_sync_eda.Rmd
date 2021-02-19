@@ -7,7 +7,7 @@ output: html_document
 
 ```{r setup, include=FALSE}
 knitr::opts_chunk$set(echo = TRUE)
-knitr::opts_knit$set(root.dir = '/home/bcowley/Benslab/EMOSYNC/DYNECOM/')
+knitr::opts_knit$set(root.dir = '/home/bcowley/Benslab/METHODMAN/project_DYNECOM/')
 library(tidyverse)
 library(reshape2)
 library(RcppRoll)
@@ -59,7 +59,7 @@ sbjix <- seq(1, length(subjs))
 
 # SLIDING WINDOW CORRELATIONS
 
-Within each dyad, a sliding window median is taken for each signal, _a_ and _b_, and the Pearson correlation coefficient is obtained. This is extended to the combination of all with all, to obtain the correlation matrix displayed.
+Within each dyad, a statistic is taken within sliding windows, for each signal, _a_ and _b_. The statistic is chosen in the 'method' parameter above, and should reflect the aspect of physiology we believe is synchronizing. Then, the Pearson correlation coefficient is obtained. This is extended to the combination of all with all, to obtain the correlation matrix displayed.
 
 The diagonal of the matrix (true dyad correlations) provides the test measurement. The diagonal is averaged (correlation aggregation is not needed because the number of elements per correlation is constant across dyads).
 
